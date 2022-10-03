@@ -19,8 +19,8 @@ const config = {
       prefix:'cannabis_'
     },
     pathImg :{
-      pathTmp :"./upload/tmp",
-      pathItem : "./upload/img-items",
+      pathTmp :"../upload/tmp",
+      pathItem : "../../upload/img-items",
     },
     mail: {
       type:"",

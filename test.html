@@ -37,7 +37,7 @@
           "product_price": 2
         }
 
-        formData.append("img", null);
+        formData.append("img", file);
         formData.append("filename", "testname");
         formData.append("type", "Seed");
         formData.append("name", "Thai stick");
@@ -47,25 +47,25 @@
         formData.append("quantity", 1);
         formData.append("phase_use", [1]);
         formData.append("description", "Cannabis seed");
-        formData.append("attribute", json);
+        formData.append("attribute", JSON.stringify(json));
 
 
 
-
+        console.log(formData)
         connect(formData)
-        if (!file.type) {
-          status.textContent = 'Error: The File.type property does not appear to be supported on this browser.';
-          return;
-        }
-        if (!file.type.match('image.*')) {
-          status.textContent = 'Error: The selected file does not appear to be an image.'
-          return;
-        }
+        // if (!file.type) {
+        //   status.textContent = 'Error: The File.type property does not appear to be supported on this browser.';
+        //   return;
+        // }
+        // if (!file.type.match('image.*')) {
+        //   status.textContent = 'Error: The selected file does not appear to be an image.'
+        //   return;
+        // }
 
         const reader = new FileReader();
-        reader.addEventListener('load', event => {
-          output.src = event.target.result;
-        });
+        // reader.addEventListener('load', event => {
+        //   output.src = event.target.result;
+        // });
         reader.readAsDataURL(file);
       });
     }

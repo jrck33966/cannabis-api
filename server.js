@@ -7,6 +7,7 @@ var cors = require('cors')
 var login = require("./core/login/longin.route")
 var users = require("./core/users/users.route")
 var items = require("./core/items/items.route")
+var image =require("./core/image/image.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
@@ -19,9 +20,13 @@ app.use(cookieParser());
 app.use('/', login)
 app.use('/user', users)
 app.use('/item', items)
+app.use('/image',image)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
+
+
+
 
 // let ar =  connect();
 // console.log(ar)

@@ -10,8 +10,12 @@ router.post('/', [
     controller.addItem
 ]);
 
-router.get('/:name', [
-    controller.getItem
-]);
+// router.get('/:name', [
+//     controller.getItem
+// ]);
+
+router.get('/all', 
+    controller.getAll
+);
 
 module.exports = router;

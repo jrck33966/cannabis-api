@@ -45,6 +45,12 @@ const ItemSchema = mongoose.Schema({
     },
     attribute: {
         type: Object
+    },
+    start_date:{
+        type: String
+    },
+    end_date:{
+        type: String
     }
 }, { versionKey: false });
 

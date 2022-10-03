@@ -1,18 +1,20 @@
 var multer = require('multer');
 var config = require('../config/config')
 const fs = require('fs');
-
+const path = require('path');
+// let strPath = `../../upload/img-items/${filename}`
+//         let p = path.resolve(__dirname, strPath)
 var storage = multer.diskStorage({
     destination: (req, file, callback) => {
-        fs.exists(config.pathImg.pathTmp, function (exists) {
+        fs.exists(path.resolve(__dirname, config.pathImg.pathTmp), function (exists) {
             if (exists) {
-                callback(null, config.pathImg.pathTmp);
+                callback(null, path.resolve(__dirname, config.pathImg.pathTmp));
             } else {
-                fs.mkdir(config.pathImg.pathTmp, function (err) {
+                fs.mkdir(path.resolve(__dirname, config.pathImg.pathTmp), { recursive: true }, function (err) {
                     if (err) {
-
+                        console.log(err)
                     } else {
-                        callback(null, config.pathImg.pathTmp);
+                        callback(null, path.resolve(__dirname, config.pathImg.pathTmp));
                     }
                 })
             }
