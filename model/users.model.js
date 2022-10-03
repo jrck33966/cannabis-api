@@ -10,7 +10,7 @@ const UserSchema = mongoose.Schema({
     }, 
     item:{
         type: Array
-    }
+    },
     // hash : String, 
     // salt : String 
 }, { versionKey: false }); 

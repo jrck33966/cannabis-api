@@ -18,14 +18,14 @@ const init = async () => {
     try {
         await connectDB();
         console.log("connect db Successful");
-        if (firstTime == true) {
-            var dayInMilliseconds = 1000 * 60 * 60 * 24;
-            firstTime = false;
-            updateUSD()
-            setInterval(() => {
-                updateUSD()
-            }, dayInMilliseconds);
-        }
+        // if (firstTime == true) {
+        //     var dayInMilliseconds = 1000 * 60 * 60 * 24;
+        //     firstTime = false;
+        //     updateUSD()
+        //     setInterval(() => {
+        //         updateUSD()
+        //     }, dayInMilliseconds);
+        // }
         return true;
     } catch (e) {
         console.log("connect db Unsuccessful");

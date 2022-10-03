@@ -16,7 +16,11 @@ const config = {
       username: '',
       password: '',
       name: 'metamask',
-      prefix:'linkwell_'
+      prefix:'cannabis_'
+    },
+    pathImg :{
+      pathTmp :"./upload/tmp",
+      pathItem : "./upload/img-items",
     },
     mail: {
       type:"",

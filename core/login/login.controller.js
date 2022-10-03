@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-var users = require('../model/users.model');
+var users = require('../../model/users.model');
 
 
 exports.getList = async function (req, res) {

@@ -1,4 +1,4 @@
-var users = require('../model/users.model');
+var users = require('../../model/users.model');
 exports.getUser = async (req, res, next) => {
     try {
         let find = await users.find({},{ _id: 0 }).exec();
