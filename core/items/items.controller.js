@@ -76,18 +76,30 @@ const checkDir = async () =>{
 
 exports.getItem = async (req, res, next) => {
     try {
-        let name = req.params.name;
-        let find = await items.findOne({ name: name }, { _id: 0 }).exec();
-        if (find) {
-            var imageAsBase64 = fs.readFileSync(find.imgPath, 'base64');
+        const { type } = req.body;   
+        let find;
+        if( type == undefined || ""){
+            find = await items.find({}, { _id: 0 }).exec(); 
+        }else{
+            find = await items.find({ type: type }, { _id: 0 }).exec(); 
+        }      
+        if (find && find.length > 0) {
+            // var imageAsBase64 = fs.readFileSync(find.imgPath, 'base64');
             return res
                 .status(200)
                 .json({
                     statusCode: "200",
                     message: "Get Item successfully 😊 👌",
                     result: find,
-                    img: imageAsBase64
                 });
+        }else{
+            return res
+            .status(404)
+            .json({
+                statusCode: "404",
+                message: "Get Item Not Foud",
+                result:[]
+            });
         }
     }
     catch (err) {

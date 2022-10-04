@@ -5,7 +5,7 @@ var request = require('request');
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(`mongodb://${config.db.host}:${config.db.port}/${config.db.name}`, { useNewUrlParser: true });
+        await mongoose.connect(`mongodb://${config.db.username}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.name}`);
         var db = mongoose.connection
         return db;
     } catch (err) {
@@ -17,38 +17,29 @@ var firstTime = true;
 const init = async () => {
     try {
         await connectDB();
-        console.log("connect db Successful");
-        // if (firstTime == true) {
-        //     var dayInMilliseconds = 1000 * 60 * 60 * 24;
-        //     firstTime = false;
-        //     updateUSD()
-        //     setInterval(() => {
-        //         updateUSD()
-        //     }, dayInMilliseconds);
-        // }
-        return true;
+        if(mongoose.connection.readyState == 1){
+            console.log("connect db Successful" )
+            return true;
+        }else{
+            console.log("connect db Unsuccessful" )
+            return false;
+        }
+        // let log = mongoose.connection.readyState == 1 ? "connect db Successful" : "connect db Unsuccessful";
+        // console.log(log);
+        // // if (firstTime == true) {
+        // //     var dayInMilliseconds = 1000 * 60 * 60 * 24;
+        // //     firstTime = false;
+        // //     updateUSD()
+        // //     setInterval(() => {
+        // //         updateUSD()
+        // //     }, dayInMilliseconds);
+        // // }
+        // return true;
     } catch (e) {
         console.log("connect db Unsuccessful");
         console.log(`error -> ${e}`)
         return false;
     }
-    // await connectDB()
-    // .then(res => {
-    //     console.log("connect db Successful");
-    //     if (firstTime == true) {
-    //         var dayInMilliseconds = 1000 * 60 * 60 * 24;
-    //         firstTime = false;
-    //         updateUSD()
-    //         setInterval(() => {
-    //             updateUSD()
-    //         }, dayInMilliseconds);
-    //     }
-    //     return "connect db Successful";
-    // }).catch(err => {
-    //     console.log("connect db Unsuccessful");
-    //     return "connect db Unsuccessful";
-    //     // console.log(mongoose.connection.readyState);
-    // });
 }
 
 function updateUSD() {

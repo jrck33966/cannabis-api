@@ -5,17 +5,16 @@ var controller = require("./items.controller")
 var authorization = require("../../middleware/auth")
 var upload = require('../../middleware/multer')
 
-router.post('/', [
-    upload.single('img'),
-    controller.addItem
-]);
-
-// router.get('/:name', [
-//     controller.getItem
+// router.post('/add', [
+//     upload.single('img'),
+//     controller.addItem
 // ]);
 
-router.get('/all', 
-    controller.getAll
-);
+router.post("/get",[authorization,controller.getItem]);
+
+// router.get('/all',
+//     authorization,
+//     controller.getAll
+// );
 
 module.exports = router;

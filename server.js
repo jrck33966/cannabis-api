@@ -25,14 +25,7 @@ app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
 
-
-
-
-// let ar =  connect();
-// console.log(ar)
-
 app.listen(config.app.port, async () => {
-
     let con = await connect();
     if (con) {
         console.log(`Start server at port ${config.app.port}.`)
