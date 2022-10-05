@@ -78,7 +78,7 @@ exports.getItem = async (req, res, next) => {
     try {
         const { type } = req.body;   
         let find;
-        if( type == undefined || ""){
+        if( type == undefined || type == ""){
             find = await items.find({}, { _id: 0 }).exec(); 
         }else{
             find = await items.find({ type: type }, { _id: 0 }).exec(); 

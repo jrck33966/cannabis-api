@@ -5,10 +5,10 @@ var controller = require("./login.controller")
 var authorization = require("../../middleware/auth");
 var fs = require('fs');
 const path = require('path');
-
-router.get('/', (req, res) => res.send('Welcome to API'))
-router.post('/signin', [check('eth_address').not().isEmpty()], controller.signin, controller.lonig)
-router.post("/login", [check('eth_address').not().isEmpty()], controller.lonig);
+//user
+router.get('/', (req, res) => res.send('Welcome to API'));
+router.post('/signin', createValidationFor('login'), controller.signin,controller.lonig);
+router.post('/login', createValidationFor('login'), controller.lonig);
 router.post("/logout", authorization, controller.logout);
 router.get('/image/:name', (req, res) => {
     try {
@@ -25,6 +25,22 @@ router.get('/image/:name', (req, res) => {
     }
 
 })
+function createValidationFor(route) {
+    switch (route) {
+        case 'login':
+            return [
+                check('eth_address').not().isEmpty()
+            ];
 
+        default:
+            return [];
+    }
+}
+
+
+//admin
+router.post('/admin/login',
+    createValidationFor('login'),
+    controller.adminLonig);
 
 module.exports = router;

@@ -8,9 +8,18 @@ const UserSchema = mongoose.Schema({
         type : String, 
         required : true
     }, 
-    item:{
+    item : {
         type: Array
     },
+    attribute : {
+        type: Object
+    },
+    createDate : {
+        type : Date
+    },
+    lastUpdate : {
+        type :Date
+    }
     // hash : String, 
     // salt : String 
 }, { versionKey: false }); 
