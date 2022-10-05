@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const config = require("../../config/config");
+const bcrypt = require('bcrypt');
 
 exports.adminLogin = async (req, res) => {
     const { username , password } = req.body;
@@ -20,16 +21,17 @@ exports.adminLogin = async (req, res) => {
             statusCode: "400",
         }); 
     }
-    if(username != "dev" || password != "dev") {
-        return res
-        .status(400)
-        .json({
-            message: "Password is mismatch",
-            statusCode: "400",
-        });
-    }
-
-    const token = jwt.sign({ role: "god" }, config.jwtSecretAdmin);
+    // if(username != "dev" || password != "dev") {
+    //     return res
+    //     .status(400)
+    //     .json({
+    //         message: "Password is mismatch",
+    //         statusCode: "400",
+    //     });
+    // }
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(`${password}`, salt);
+    const token = jwt.sign({ id:hash, role: "god" }, config.jwtSecretAdmin);
     var dayInMilliseconds = 1000 * 60 * 60 * 24;
     let exp = new Date(Number(new Date()) + dayInMilliseconds);
     return res

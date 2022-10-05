@@ -104,7 +104,7 @@ exports.addItem = async (req, res) => {
             .status(200)
             .json({
                 statusCode: "200",
-                message: "Add Item successfully 😊 👌"
+                message: "Add item successfully 😊 👌"
             });
     }
     catch (err) {
@@ -167,6 +167,7 @@ exports.editItem = async (req, res) => {
         dateUpdate['image'] = img_filename == (undefined || null || "") ? null : `${ip.address()}:3000/image/${img_filename}`;
         let find = await items.findOne({ id: id }).exec();
         if (find) {
+            console.log()
             delete dateUpdate.id;
             items.updateOne(
                 { "_id": ObjectId(find._id) },
@@ -179,15 +180,15 @@ exports.editItem = async (req, res) => {
                 .status(200)
                 .json({
                     statusCode: "200",
-                    message: "Edit Item successfully 😊 👌"
+                    message: "Edit item successfully 😊 👌"
                 });
         } else {
             return res
                 .status(404)
                 .json({
                     statusCode: "404",
-                    message: "Get Item Not Foud",
-                    result: []
+                    message: "Get item Not Foud",
+                    result: null
                 });
         }
     }
@@ -216,7 +217,7 @@ exports.getItem = async (req, res) => {
                 .status(200)
                 .json({
                     statusCode: "200",
-                    message: "Get Item successfully 😊 👌",
+                    message: "Get item successfully 😊 👌",
                     result: find,
                 });
         } else {
@@ -224,7 +225,7 @@ exports.getItem = async (req, res) => {
                 .status(404)
                 .json({
                     statusCode: "404",
-                    message: "Get Item Not Foud",
+                    message: "Get item not foud",
                     result: []
                 });
         }
@@ -247,9 +248,49 @@ exports.getAll = async (req, res) => {
                 .status(200)
                 .json({
                     statusCode: "200",
-                    message: "Get Item successfully 😊 👌",
+                    message: "Get item successfully 😊 👌",
                     result: find
                 });
+        }
+    }
+    catch (err) {
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
+}
+
+exports.deleteItem = async (req, res) => {
+    try {
+        let id = req.params.id;
+        let find = await items.findOne({ id: id }).exec();
+        if (find) {
+            const query = { _id: ObjectId(find._id)};
+            console.log(query)
+            const result = await items.deleteOne(query);
+            if (result.deletedCount === 1) {
+                console.log("Successfully deleted one document.");
+            } else {
+                console.log("No documents matched the query. Deleted 0 documents.");
+            }
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "Delete item successfully 😊 👌",
+                    result: result
+                });
+        }else{
+            return res
+            .status(404)
+            .json({
+                statusCode: "404",
+                message: "Get item not foud",
+                result: null
+            });
         }
     }
     catch (err) {

@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 var users = require('../model/users.model');
 var ObjectId = require('mongoose').Types.ObjectId;
 var config = require('../config/config')
+const bcrypt = require('bcrypt');
 
 const authorization = async (req, res, next) => {
     const token = req.cookies.uuid;
@@ -13,6 +14,11 @@ const authorization = async (req, res, next) => {
                 if (data_dg.role != "god") {
                     return res.status(401)
                         .json({ message: "Unauthorization" });
+                }
+                let r = await bcrypt.compare('dev', data_dg.id)
+                if(!r){
+                    return res.status(401)
+                    .json({ message: "Unauthorization" });
                 }
                 return next();
             }

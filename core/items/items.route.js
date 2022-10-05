@@ -13,6 +13,7 @@ router.post('/add', [
 ]);
 router.post("/get", [authorization, controller.getItem]);
 router.post("/edit", [authorizationAdmin, upload.single('img'), controller.editItem]);
+router.delete("/:id", [authorizationAdmin,controller.deleteItem]);
 
 // router.get('/all',
 //     authorization,
