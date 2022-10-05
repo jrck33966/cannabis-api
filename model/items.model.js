@@ -1,16 +1,7 @@
 const mongoose = require('mongoose');
 var crypto = require('crypto');
 var config = require('../config/config');
-
-
-// const ItemSchema = mongoose.Schema({
-//     name: {
-//         type: String
-//     },
-//     imgPath: {
-//         type: String
-//     }
-// }, { versionKey: false });
+var autoIncrement = require('mongoose-auto-increment');
 
 const ItemSchema = mongoose.Schema({
     id: {
@@ -53,5 +44,9 @@ const ItemSchema = mongoose.Schema({
         type: String
     }
 }, { versionKey: false });
-
+// autoIncrement.initialize(mongoose.connection);
+// ItemSchema.plugin(autoIncrement.plugin, {
+//     model: "items", 
+//     field: "id"
+//   });
 module.exports = mongoose.model('items', ItemSchema, config.db.prefix + 'items'); 

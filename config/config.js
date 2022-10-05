@@ -3,7 +3,7 @@ const config = {
       port: 3000
     },
     db: {
-      host: '192.168.1.46',
+      host: 'localhost',
       port: 27017,
       username: 'cannabis',
       password: 'cannabis2022',
@@ -15,6 +15,7 @@ const config = {
       pathItem : "../../upload/img-items",
     },
     jwtSecret : "cain-api-dev",
+    jwtSecretAdmin : "cain-api-admin",
    };
    
    

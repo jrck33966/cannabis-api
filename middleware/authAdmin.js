@@ -4,19 +4,17 @@ var ObjectId = require('mongoose').Types.ObjectId;
 var config = require('../config/config')
 
 const authorization = async (req, res, next) => {
-    const token = req.cookies.uuid;
+    const token = req.cookies.gdid;
     if (!token) {
         return res.status(401)
             .json({ message: "Unauthorization" });
     }
     try {
-        const data = jwt.verify(token,config.jwtSecret);
-        let find = await users.findOne({ id: ObjectId(data.id) }).exec()
-        if (!find) {
+        const data = jwt.verify(token,config.jwtSecretAdmin);
+        if(data.role != "god"){
             return res.status(401)
-                .json({ message: "Unauthorization" });
+            .json({ message: "Unauthorization" });
         }
-        req.userId = data.id;
         return next();
     } catch {
         return res.status(401)

@@ -66,7 +66,7 @@ exports.test = async (req, res, next) => {
                 statusCode: "200",
                 message: "Signin in successfully 😊 👌",
             });
-        
+
     }
     // var usersModel = new users();
     // usersModel.eth_address = eth_address;
@@ -90,11 +90,11 @@ exports.test = async (req, res, next) => {
         const reu = await users.create(userJson)
         // return next();
         return res
-        .status(200)
-        .json({
-            statusCode: "200",
-            message: "Signin in successfully 😊 👌",
-        });
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "Signin in successfully 😊 👌",
+            });
     }
     catch (err) {
         return res
@@ -117,7 +117,7 @@ exports.lonig = async (req, res) => {
                 statusCode: "400",
             });
     }
-    const token = jwt.sign({ id: find._id }, config.jwtSecret);
+    const token = jwt.sign({ id: find._id, role: "nor" }, config.jwtSecret);
     var dayInMilliseconds = 1000 * 60 * 60 * 24;
     let exp = new Date(Number(new Date()) + dayInMilliseconds);
     return res
@@ -141,28 +141,3 @@ exports.logout = (req, res) => {
 };
 
 
-exports.adminLonig = async (req, res) => {
-    const { username , password } = req.body;
-    if(username != "dev" && password != "dev") {
-        return res
-        .status(401)
-        .json({
-            message: "Password is mismatch",
-            statusCode: "401",
-        });
-    }
-    const token = jwt.sign({ id: "god" }, config.jwtSecret);
-    var dayInMilliseconds = 1000 * 60 * 60 * 24;
-    let exp = new Date(Number(new Date()) + dayInMilliseconds);
-    return res
-        .cookie("uuid", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            expires: exp
-        })
-        .status(200)
-        .json({
-            message: "Login in successfully 😊 👌",
-            statusCode: "200",
-        });
-};

@@ -38,7 +38,7 @@
         }
 
         formData.append("img", file);
-        formData.append("filename", "testname");
+        // formData.append("filename", "testname");
         formData.append("type", "Seed");
         formData.append("name", "Thai stick");
         formData.append("rarity", "B");
@@ -51,7 +51,7 @@
 
 
 
-        console.log(formData)
+        console.log(formData.get('img'))
         connect(formData)
         // if (!file.type) {
         //   status.textContent = 'Error: The File.type property does not appear to be supported on this browser.';
@@ -93,11 +93,13 @@
     // }
 
     async function connect(formData) {
-      const api_url = "http://localhost:3000/item";
+      const api_url = "http://localhost:3000/item/add";
       const response = await fetch(api_url, {
         method: 'POST',
         body: formData,
       });
+
+      console.log(response)
       // let filename = response.headers.get('FileName');
       // const imageBlob = await response.blob()
       // const imageObjectURL = URL.createObjectURL(imageBlob);
