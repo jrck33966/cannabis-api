@@ -18,6 +18,7 @@
     <img id="output">
   </div>
   <script>
+    connect("dev");
     const status = document.getElementById('status');
     const output = document.getElementById('output');
     if (window.FileList && window.File && window.FileReader) {
@@ -93,13 +94,29 @@
     // }
 
     async function connect(formData) {
-      const api_url = "http://localhost:3000/item/add";
+      const api_url = "http://ec2-13-212-196-98.ap-southeast-1.compute.amazonaws.com/admin/login";
+      // const api_url = "http://localhost:3000/admin/login";
       const response = await fetch(api_url, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+          username: "dev",
+          password: "dev"
+
+        }),
+        credentials: "include"
       });
 
-      console.log(response)
+      // const response = await fetch("http://ec2-13-212-196-98.ap-southeast-1.compute.amazonaws.com/image/1.jpg", {
+      //   method: 'GET',
+      // });
+
+
+      console.log(await response.json())
       // let filename = response.headers.get('FileName');
       // const imageBlob = await response.blob()
       // const imageObjectURL = URL.createObjectURL(imageBlob);

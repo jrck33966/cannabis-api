@@ -8,24 +8,47 @@ var admin = require("./core/admin/admin.route")
 var login = require("./core/login/longin.route")
 var users = require("./core/users/users.route")
 var items = require("./core/items/items.route")
-var image =require("./core/image/image.route")
+var image = require("./core/image/image.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
 
-app.use(cors({ credentials: true, origin: true, exposedHeaders: '*' }))
+// app.use(cors({
+//     origin:  true,
+//     credentials: true,  
+//     exposedHeaders: '*',
+//     methods: 'PUT, POST, PATCH, GET, DELETE'
+// }))
+// app.use(cors({origin:true,credentials: true}));
+// app.options('*', cors())
+// app.use(cors({origin:'*',credentials: true}));
+
+app.use((req, res, next) => {
+    const corsWhitelist = [
+        'http://localhost:4200'
+    ];
+    if (corsWhitelist.indexOf(req.headers.origin) !== -1) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+        res.setHeader('Access-Control-Allow-Credentials', true);
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser());
 app.use('/', login)
-app.use('/admin',admin)
+app.use('/admin', admin)
 app.use('/user', users)
 app.use('/item', items)
-app.use('/image',image)
+app.use('/image', image)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
+
 
 app.listen(config.app.port, async () => {
     let con = await connect();

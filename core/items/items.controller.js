@@ -164,10 +164,9 @@ exports.editItem = async (req, res) => {
         if (typeof dateUpdate != 'object') {
             dateUpdate = JSON.parse(dateUpdate);
         }
-        dateUpdate['image'] = img_filename == (undefined || null || "") ? null : `${ip.address()}:3000/image/${img_filename}`;
-        let find = await items.findOne({ id: id }).exec();
+        let find = await items.findOne({ id: id }).exec();       
         if (find) {
-            console.log()
+            dateUpdate['image'] = img_filename == (undefined || null || "") ? find.image : `${ip.address()}:3000/image/${img_filename}`;
             delete dateUpdate.id;
             items.updateOne(
                 { "_id": ObjectId(find._id) },
@@ -204,9 +203,9 @@ exports.editItem = async (req, res) => {
 
 exports.getItem = async (req, res) => {
     try {
-        const { type } = req.body;
+        const  type  = req.params.type;
         let find;
-        if (type == undefined || type == "") {
+        if (type == undefined || type == "" || type == "all") {
             find = await items.find({}, { _id: 0 }).exec();
         } else {
             find = await items.find({ type: type }, { _id: 0 }).exec();
@@ -281,14 +280,14 @@ exports.deleteItem = async (req, res) => {
                 .json({
                     statusCode: "200",
                     message: "Delete item successfully 😊 👌",
-                    result: result
+                    result: `deletedCount ${result.deletedCount}`
                 });
         }else{
             return res
             .status(404)
             .json({
                 statusCode: "404",
-                message: "Get item not foud",
+                message: "Item not foud",
                 result: null
             });
         }

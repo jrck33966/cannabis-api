@@ -21,24 +21,27 @@ exports.adminLogin = async (req, res) => {
             statusCode: "400",
         }); 
     }
-    // if(username != "dev" || password != "dev") {
-    //     return res
-    //     .status(400)
-    //     .json({
-    //         message: "Password is mismatch",
-    //         statusCode: "400",
-    //     });
-    // }
+    if(username != "dev" || password != "dev") {
+        return res
+        .status(400)
+        .json({
+            message: "Password is mismatch",
+            statusCode: "400",
+        });
+    }
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(`${password}`, salt);
+    const hash = await bcrypt.hash(`${username}`, salt);
     const token = jwt.sign({ id:hash, role: "god" }, config.jwtSecretAdmin);
     var dayInMilliseconds = 1000 * 60 * 60 * 24;
     let exp = new Date(Number(new Date()) + dayInMilliseconds);
     return res
         .cookie("gdid", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            expires: exp
+            secure: true,
+            expires: exp,
+            sameSite: 'None'
+            
+            
         })
         .status(200)
         .json({
