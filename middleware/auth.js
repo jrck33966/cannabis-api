@@ -5,52 +5,56 @@ var config = require('../config/config')
 const bcrypt = require('bcrypt');
 
 const authorization = async (req, res, next) => {
-    const token = req.cookies.uuid;
-    if (!token) {
-        try {
-            const gdid = req.cookies.gdid;
-            if (gdid) {
-                const data_dg = jwt.verify(gdid, config.jwtSecretAdmin);
-                if (data_dg.role != "god") {
+    const bearerHeader = req.headers['authentication'];
+    if (!bearerHeader) {
+        return res.status(401)
+            .json({ message: "Unauthorization" });
+    }
+    try {
+        let bearer = bearerHeader.split(' ');
+        let token = bearer[1];
+        if (!token) {
+            return res.status(401)
+                .json({ message: "Unauthorization" });
+        }
+        jwt.verify(token, config.jwtSecretAdmin, async (err, data) => {
+            if (err) {
+                try {
+                    let ag_data = jwt.verify(token, config.jwtSecret);      
+                    let exp = ag_data.exp;
+                    if (Date.now() >= exp * 1000) {
+                        return res.status(401)
+                        .json({ message: "Unauthorization" });
+                    }
+                    let find = await users.findOne({ id: ObjectId(ag_data.id) }).exec();               
+                    if (!find) {
+                        return res.status(401)
+                            .json({ message: "Unauthorization" });
+                    }
+                    req.userId = ag_data.id;
+                    return next();
+                } catch {
                     return res.status(401)
                         .json({ message: "Unauthorization" });
                 }
-                let r = await bcrypt.compare('dev', data_dg.id)
-                if(!r){
+
+            } else {
+                let r = await bcrypt.compare('dev', data.id)
+                if (!r) {
+                    return res.status(401)
+                        .json({ message: "Unauthorization" });
+                }
+                let exp = data.exp;
+                if (Date.now() >= exp * 1000) {
                     return res.status(401)
                     .json({ message: "Unauthorization" });
                 }
-                const salt = await bcrypt.genSalt(10);
-                const hash = await bcrypt.hash(`dev`, salt);
-                const token = jwt.sign({ id:hash, role: "god" }, config.jwtSecretAdmin);
-                var dayInMilliseconds = 1000 * 60 * 60 * 24;
-                let exp = new Date(Number(new Date()) + dayInMilliseconds);
-                res
-                .cookie("gdid", token, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === "production",
-                    expires: exp
-                })
                 return next();
             }
-            return res.status(401)
-                .json({ message: "Unauthorization" });
-        } catch (e) {
-            console.log(e)
-        }
-    }
-    try {
-        const data = jwt.verify(token, config.jwtSecret);
-        let find = await users.findOne({ id: ObjectId(data.id) }).exec()
-        if (!find) {
-            return res.status(401)
-                .json({ message: "Unauthorization" });
-        }
-        req.userId = data.id;
-        return next();
-    } catch {
+        });
+    } catch (e) {
         return res.status(401)
-            .json({ message: "Unauthorization" });;
+            .json({ message: "Unauthorization" });
     }
 };
 

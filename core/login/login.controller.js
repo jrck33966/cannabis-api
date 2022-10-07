@@ -117,19 +117,22 @@ exports.lonig = async (req, res) => {
                 statusCode: "400",
             });
     }
-    const token = jwt.sign({ id: find._id, role: "nor" }, config.jwtSecret);
-    var dayInMilliseconds = 1000 * 60 * 60 * 24;
-    let exp = new Date(Number(new Date()) + dayInMilliseconds);
+    const token = jwt.sign({ id: find._id, role: "nor" }, config.jwtSecret , { expiresIn: '2h' });
+    // var dayInMilliseconds = 1000 * 60 * 60 * 24;
+    // let exp = new Date(Number(new Date()) + dayInMilliseconds);
     return res
-        .cookie("uuid", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            expires: exp
-        })
+        // .cookie("uuid", token, {
+        //     httpOnly: true,
+        //     secure: process.env.NODE_ENV === "production",
+        //     expires: exp
+        // })
         .status(200)
         .json({
             message: "Login in successfully 😊 👌",
             statusCode: "200",
+            result: {
+                token: token
+            }
         });
 };
 
