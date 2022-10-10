@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
 var users = require('../model/users.model');
 var ObjectId = require('mongoose').Types.ObjectId;
-var config = require('../config/config')
+var config = require('../config/config');
 const bcrypt = require('bcrypt');
+let admin_token = require('../model/adminToken.model');
+let users_token = require('../model/usersToken.mode')
 
 const authorization = async (req, res, next) => {
     const bearerHeader = req.headers['authentication'];
@@ -20,18 +22,30 @@ const authorization = async (req, res, next) => {
         jwt.verify(token, config.jwtSecretAdmin, async (err, data) => {
             if (err) {
                 try {
-                    let ag_data = jwt.verify(token, config.jwtSecret);      
-                    let exp = ag_data.exp;
+                    let users_data = jwt.verify(token, config.jwtSecret);
+                    let exp = users_data.exp;
                     if (Date.now() >= exp * 1000) {
                         return res.status(401)
-                        .json({ message: "Unauthorization" });
+                            .json({ message: "Unauthorization" });
                     }
-                    let find = await users.findOne({ id: ObjectId(ag_data.id) }).exec();               
+                    let find = await users.findOne({ id: ObjectId(users_data.id) }).exec();
                     if (!find) {
                         return res.status(401)
                             .json({ message: "Unauthorization" });
                     }
-                    req.userId = ag_data.id;
+                    let usersMongo = await users_token.findOne({ token: token }).exec();
+                    if (usersMongo) {
+                        if (usersMongo.revoke) {
+                            return res.status(401)
+                                .json({ message: "Unauthorization" });
+                        }
+                        else if (Date.now() >= usersMongo.expiresIn) {
+                            return res.status(401)
+                                .json({ message: "Unauthorization" });
+                        }
+                    }
+                    req.userId = users_data.id;
+                    req.token = token;
                     return next();
                 } catch {
                     return res.status(401)
@@ -47,7 +61,18 @@ const authorization = async (req, res, next) => {
                 let exp = data.exp;
                 if (Date.now() >= exp * 1000) {
                     return res.status(401)
-                    .json({ message: "Unauthorization" });
+                        .json({ message: "Unauthorization" });
+                }
+                let adminMongo = await admin_token.findOne({ token: token }).exec();
+                if (adminMongo) {
+                    if (adminMongo.revoke) {
+                        return res.status(401)
+                            .json({ message: "Unauthorization" });
+                    }
+                    else if (Date.now() >= adminMongo.expiresIn) {
+                        return res.status(401)
+                            .json({ message: "Unauthorization" });
+                    }
                 }
                 return next();
             }

@@ -1,6 +1,9 @@
+let ms = require('ms');
 const jwt = require("jsonwebtoken");
 const config = require("../../config/config");
 const bcrypt = require('bcrypt');
+let admin_token = require('../../model/adminToken.model')
+
 
 exports.adminLogin = async (req, res) => {
     const { username, password } = req.body;
@@ -29,9 +32,20 @@ exports.adminLogin = async (req, res) => {
                 statusCode: "400",
             });
     }
+    const exp = '2h';
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(`${username}`, salt);
-    const token = jwt.sign({ id: hash, role: "god" }, config.jwtSecretAdmin , { expiresIn: '2h' });
+    const token = jwt.sign(
+        { id: hash, role: "god" },
+        config.jwtSecretAdmin,
+        { expiresIn: exp, algorithm: 'HS384' }
+    );
+
+    let newAdmtoken = new admin_token();
+    newAdmtoken.token = token;
+    newAdmtoken.expiresIn = Date.now() + ms(exp);
+    newAdmtoken.revoke = false;
+    newAdmtoken.save();
     // var dayInMilliseconds = 1000 * 60 * 60 * 24;
     // var dayInMilliseconds = 1000 * 10;
     // const expires = new Date(Number(new Date()) + dayInMilliseconds);
@@ -53,6 +67,13 @@ exports.adminLogin = async (req, res) => {
 };
 
 exports.adminlogout = (req, res) => {
+    let token = req.token;
+    admin_history.updateOne(
+        { "token": token },
+        {
+            $set: {"revoke" : true}
+        }
+    ).exec();
     return res
         .clearCookie("gdid")
         .status(200)

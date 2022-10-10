@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const config = require("../../config/config");
 var users = require('../../model/users.model');
-
+var users_token = require('../../model/usersToken.mode')
+var ms = require('ms');
 
 exports.getList = async function (req, res) {
     return res
@@ -117,7 +118,17 @@ exports.lonig = async (req, res) => {
                 statusCode: "400",
             });
     }
-    const token = jwt.sign({ id: find._id, role: "nor" }, config.jwtSecret , { expiresIn: '2h' });
+    const exp = '2h';
+    const token = jwt.sign(
+        { id: find._id, role: "nor" },
+        config.jwtSecret,
+        { expiresIn: exp, algorithm: 'HS384' }
+    );
+    let newUserToken= new users_token();
+    newUserToken.token = token;
+    newUserToken.expiresIn = Date.now() + ms(exp);
+    newUserToken.revoke = false;
+    newUserToken.save();
     // var dayInMilliseconds = 1000 * 60 * 60 * 24;
     // let exp = new Date(Number(new Date()) + dayInMilliseconds);
     return res
@@ -137,6 +148,13 @@ exports.lonig = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
+    let token = req.token;
+    users_token.updateOne(
+        { "token": token },
+        {
+            $set: {"revoke" : true}
+        }
+    ).exec();
     return res
         .clearCookie("uuid")
         .status(200)

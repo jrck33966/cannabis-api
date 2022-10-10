@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 var config = require('../config/config')
 const bcrypt = require('bcrypt');
+let admin_token = require('../model/adminToken.model');
 
 const authorization = async (req, res, next) => {
     const bearerHeader = req.headers['authentication'];
@@ -30,6 +31,17 @@ const authorization = async (req, res, next) => {
             return res.status(401)
                 .json({ message: "Unauthorization" });
         }
+
+        let adminMongo = await admin_token.findOne({ token: token }).exec();
+        if (adminMongo.revoke) {
+            return res.status(401)
+                .json({ message: "Unauthorization" });
+        }
+        else if (Date.now() >= adminMongo.expiresIn) {
+            return res.status(401)
+                .json({ message: "Unauthorization" });
+        }
+        req.token = token;
         return next();
     } catch {
         return res.status(401)
