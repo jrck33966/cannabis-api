@@ -93,9 +93,9 @@
     //   }
     // }
 
-    async function connect(formData) {
+    async function connect() {
       const api_url = "http://ec2-13-212-196-98.ap-southeast-1.compute.amazonaws.com/admin/login";
-      // const api_url = "http://localhost:3000/admin/login";
+
       const response = await fetch(api_url, {
         method: 'POST',
         headers: {
@@ -110,20 +110,7 @@
         }),
         credentials: "include"
       });
-
-      // const response = await fetch("http://ec2-13-212-196-98.ap-southeast-1.compute.amazonaws.com/image/1.jpg", {
-      //   method: 'GET',
-      // });
-
-
       console.log(await response.json())
-      // let filename = response.headers.get('FileName');
-      // const imageBlob = await response.blob()
-      // const imageObjectURL = URL.createObjectURL(imageBlob);
-      // document.getElementById("main").src = imageObjectURL;
-      // setseelct(filename);
-
-
     }
   </script>
 

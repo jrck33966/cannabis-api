@@ -68,7 +68,7 @@ exports.adminLogin = async (req, res) => {
 
 exports.adminlogout = (req, res) => {
     let token = req.token;
-    admin_history.updateOne(
+    admin_token.updateOne(
         { "token": token },
         {
             $set: {"revoke" : true}

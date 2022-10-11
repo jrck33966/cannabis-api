@@ -27,6 +27,11 @@ router.delete("/:id", [
     controller.deleteItem
 ]);
 
+router.post('/buy', [
+    authorization,
+    controller.buyItem
+]);
+
 
 
 module.exports = router;

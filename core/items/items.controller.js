@@ -1,4 +1,5 @@
 var items = require('../../model/items.model');
+var users = require('../../model/users.model')
 var fs = require('fs');
 const sharp = require('sharp');
 const path = require('path');
@@ -164,7 +165,7 @@ exports.editItem = async (req, res) => {
         if (typeof dateUpdate != 'object') {
             dateUpdate = JSON.parse(dateUpdate);
         }
-        let find = await items.findOne({ id: id }).exec();       
+        let find = await items.findOne({ id: id }).exec();
         if (find) {
             dateUpdate['image'] = img_filename == (undefined || null || "") ? find.image : `${ip.address()}:3000/image/${img_filename}`;
             delete dateUpdate.id;
@@ -203,7 +204,7 @@ exports.editItem = async (req, res) => {
 
 exports.getItem = async (req, res) => {
     try {
-        const  type  = req.params.type;
+        const type = req.params.type;
         let find;
         if (type == undefined || type == "" || type == "all") {
             find = await items.find({}, { _id: 0 }).exec();
@@ -267,7 +268,7 @@ exports.deleteItem = async (req, res) => {
         let id = req.params.id;
         let find = await items.findOne({ id: id }).exec();
         if (find) {
-            const query = { _id: ObjectId(find._id)};
+            const query = { _id: ObjectId(find._id) };
             console.log(query)
             const result = await items.deleteOne(query);
             if (result.deletedCount === 1) {
@@ -282,14 +283,14 @@ exports.deleteItem = async (req, res) => {
                     message: "Delete item successfully 😊 👌",
                     result: `deletedCount ${result.deletedCount}`
                 });
-        }else{
+        } else {
             return res
-            .status(404)
-            .json({
-                statusCode: "404",
-                message: "Item not foud",
-                result: null
-            });
+                .status(404)
+                .json({
+                    statusCode: "404",
+                    message: "Item not foud",
+                    result: null
+                });
         }
     }
     catch (err) {
@@ -304,4 +305,92 @@ exports.deleteItem = async (req, res) => {
 
 getLengthInObject = (obj) => {
     return Object.keys(obj).length
+}
+
+
+exports.buyItem = async (req, res) => {
+    try {
+        const { eth_address, id, quantity } = req.body;
+        if (eth_address == undefined || eth_address == "") {
+            return res
+                .status(400)
+                .json({
+                    message: "err : ValidationError: eth_address: Path `eth_address` is required.",
+                    statusCode: "400",
+                });
+        } else if (id == undefined || id == "") {
+            return res
+                .status(400)
+                .json({
+                    message: "err : ValidationError: id: Path `id` is required.",
+                    statusCode: "400",
+                });
+        } else if (quantity == undefined || quantity == "") {
+            return res
+                .status(400)
+                .json({
+                    message: "err : ValidationError: quantity: Path `quantity` is required.",
+                    statusCode: "400",
+                });
+        }
+        let itemFind = await items.findOne({ id: id }).exec();
+        if (itemFind) {
+            let userFind = await users.findOne({ "eth_address": eth_address }).exec();
+            let filter = userFind.item.find(item =>
+                item.id.toString() == itemFind._id.toString()
+            )
+            if (filter) {
+                await users.updateOne(
+                    {
+                        "eth_address": eth_address,
+                        "item.id": itemFind._id
+                    },
+                    {
+                        $set: {
+                            "item.$.quantity": filter.quantity + quantity,
+                            lastUpdate: Date.now()
+                        }
+                    }
+                ).exec()
+            } else {
+                await users.updateOne(
+                    { "eth_address": eth_address },
+                    {
+                        $push: {
+                            "item": {
+                                "id": itemFind._id,
+                                "quantity": quantity,
+                            },
+
+                        },
+                        $set: {
+                            lastUpdate: Date.now()
+                        }
+                    }
+                ).exec();
+            }
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "Buy item successfully 😊 👌"
+                });
+        } else {
+            return res
+                .status(404)
+                .json({
+                    statusCode: "404",
+                    message: "Get item Not Foud",
+                    result: null
+                });
+        }
+    }
+    catch (err) {
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
 }

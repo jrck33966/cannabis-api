@@ -125,6 +125,7 @@ exports.lonig = async (req, res) => {
         { expiresIn: exp, algorithm: 'HS384' }
     );
     let newUserToken= new users_token();
+    newUserToken.eth_address = eth_address;
     newUserToken.token = token;
     newUserToken.expiresIn = Date.now() + ms(exp);
     newUserToken.revoke = false;
