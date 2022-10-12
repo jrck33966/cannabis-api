@@ -12,6 +12,7 @@ var image = require("./core/image/image.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
+var logger = require('./config/configLog')
 
 app.use(cors({origin:true,credentials: true}));
 app.use(express.json());
@@ -26,12 +27,16 @@ app.use('/image', image)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
+// app.use(function (req, res, next) {
+//     res.status(500).send("Sorry Server!")
+// })
 
 
 app.listen(config.app.port, async () => {
     let con = await connect();
     if (con) {
         console.log(`Start server at port ${config.app.port}.`)
+        logger.info(`Start server at port ${config.app.port}.`);
     } else {
         process.exit()
     }
