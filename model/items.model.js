@@ -42,6 +42,9 @@ const ItemSchema = mongoose.Schema({
     },
     end_date:{
         type: String
+    },
+    imageOriginalPath:{
+        type: String
     }
 }, { versionKey: false });
 // autoIncrement.initialize(mongoose.connection);

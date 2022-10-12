@@ -37,9 +37,7 @@
           "quality": 500,
           "product_price": 2
         }
-
         formData.append("img", file);
-        // formData.append("filename", "testname");
         formData.append("type", "Seed");
         formData.append("name", "Thai stick");
         formData.append("rarity", "B");
@@ -50,9 +48,6 @@
         formData.append("description", "Cannabis seed");
         formData.append("attribute", JSON.stringify(json));
 
-
-
-        console.log(formData.get('img'))
         connect(formData)
         // if (!file.type) {
         //   status.textContent = 'Error: The File.type property does not appear to be supported on this browser.';

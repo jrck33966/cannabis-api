@@ -75,13 +75,14 @@ exports.addItem = async (req, res) => {
             img_filename = filename;
             await checkDir();
             await sharp(req.file.path)
-                .resize(200, 200)
+                .resize(500, 500)
                 .jpeg({ quality: 90 })
                 .toFile(
                     path.resolve(req.file.destination, '../img-items', filename)
                 )
             fs.unlinkSync(req.file.path)
         }
+        let originalPath = img_filename == (undefined || null || "") ? null : path.resolve(req.file.destination, '../img-items', img_filename)
         var itemModel = new items();
         itemModel.id = await getNextSequence();
         itemModel.image = img_filename == (undefined || null || "") ? null : `${ip.address()}:3000/image/${img_filename}`;
@@ -93,6 +94,7 @@ exports.addItem = async (req, res) => {
         itemModel.quantity = quantity == undefined ? null : quantity;
         itemModel.phase_use = phase_use == undefined ? null : phase_use;
         itemModel.description = description == undefined ? null : description;
+        itemModel.imageOriginalPath = originalPath;
         let _ob;
         if (typeof (attribute) === 'string' || attribute instanceof String) {
             _ob = JSON.parse(attribute);
@@ -141,15 +143,16 @@ exports.editItem = async (req, res) => {
     try {
         const { id } = req.body;
         let img_filename = "";
+        let dateUpdate = req.body;
         if (req.file) {
             const { filename } = req.file;
-            img_filename = filename;
+            img_filename = `${dateUpdate.id}_${filename}`;
             await checkDir();
             await sharp(req.file.path)
-                .resize(200, 200)
+                .resize(500, 500)
                 .jpeg({ quality: 90 })
                 .toFile(
-                    path.resolve(req.file.destination, '../img-items', filename)
+                    path.resolve(req.file.destination, '../img-items', img_filename)
                 )
             fs.unlinkSync(req.file.path)
         }
@@ -161,13 +164,22 @@ exports.editItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
-        let dateUpdate = req.body;
+        
         if (typeof dateUpdate != 'object') {
             dateUpdate = JSON.parse(dateUpdate);
         }
+
         let find = await items.findOne({ id: id }).exec();
         if (find) {
             dateUpdate['image'] = img_filename == (undefined || null || "") ? find.image : `${ip.address()}:3000/image/${img_filename}`;
+            let originalPath = img_filename == (undefined || null || "") ? find.imageOriginalPath : path.resolve(req.file.destination, '../img-items', img_filename)
+            dateUpdate['imageOriginalPath'] = originalPath
+            if (img_filename != (undefined || null || "")) {
+                if (fs.existsSync(find.imageOriginalPath)) {
+                    fs.unlinkSync(find.imageOriginalPath)
+                }
+            }
+
             delete dateUpdate.id;
             items.updateOne(
                 { "_id": ObjectId(find._id) },
@@ -212,7 +224,22 @@ exports.getItem = async (req, res) => {
             find = await items.find({ type: type }, { _id: 0 }).exec();
         }
         if (find && find.length > 0) {
-            // var imageAsBase64 = fs.readFileSync(find.imgPath, 'base64');
+            // var imageAsBase64 = fs.readFileSync(find[0].imageOriginalPath, 'base64');
+            find.map(item => {
+                try {
+                    if (fs.existsSync(item.imageOriginalPath)) {
+                        var imageAsBase64 = fs.readFileSync(item.imageOriginalPath, 'base64');
+                        item['image'] = imageAsBase64
+                        item['imageOriginalPath'] = null
+                    } else {
+                        item['image'] = null
+                        delete item['imageOriginalPath']
+                    }
+                } catch (err) {
+                    console.error(err)
+                }
+
+            })
             return res
                 .status(200)
                 .json({
@@ -285,6 +312,21 @@ exports.getItemByUser = async (req, res) => {
             // { $project: { _id: 0, itemUser: 1 } }
         ]).exec();
         if (find) {
+            find.map(item => {
+                try {
+                    if (fs.existsSync(item.imageOriginalPath)) {
+                        var imageAsBase64 = fs.readFileSync(item.imageOriginalPath, 'base64');
+                        item['image'] = imageAsBase64
+                        item['imageOriginalPath'] = null
+                    } else {
+                        item['image'] = null
+                        delete item['imageOriginalPath']
+                    }
+                } catch (err) {
+                    console.error(err)
+                }
+
+            })
             return res
                 .status(200)
                 .json({
