@@ -240,6 +240,78 @@ exports.getItem = async (req, res) => {
     }
 }
 
+exports.getItemByUser = async (req, res) => {
+    try {
+        const id = req.userId
+        let find = await users.aggregate([
+            { $match: { _id: ObjectId(id) } },
+            { $unwind: "$item" },
+            {
+                $lookup: {
+                    from: "cannabis_items",
+                    localField: "item.id",
+                    foreignField: "_id",
+                    as: "itemUser"
+                }
+
+            },
+            {
+                $addFields: {
+                    "itemUser.quantity_user": "$item.quantity"
+                }
+            },
+            { $unset: "itemUser._id" },
+            { $unwind: "$itemUser" },
+            {
+                $replaceRoot: {
+                    newRoot: {
+                        $mergeObjects: [
+                            {
+                                $arrayToObject: {
+                                    $map: {
+                                        input: {
+                                            $objectToArray: "$itemUser"
+                                        },
+                                        in: [
+                                            "$$this.k", "$$this.v"
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+            // { $project: { _id: 0, itemUser: 1 } }
+        ]).exec();
+        if (find) {
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "Get item successfully 😊 👌",
+                    result: find,
+                });
+        } else {
+            return res
+                .status(404)
+                .json({
+                    statusCode: "404",
+                    message: "Get user not foud",
+                    result: []
+                });
+        }
+    }
+    catch (err) {
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
+}
+
 exports.getAll = async (req, res) => {
     try {
         let find = await items.find({}, { _id: 0 }).exec();
@@ -310,7 +382,7 @@ getLengthInObject = (obj) => {
 
 exports.buyItem = async (req, res) => {
     try {
-        const { eth_address, id, quantity } = req.body;
+        let { eth_address, id, quantity } = req.body;
         if (eth_address == undefined || eth_address == "") {
             return res
                 .status(400)
@@ -333,48 +405,74 @@ exports.buyItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
+
+        if (typeof (quantity) === 'string') {
+            try {
+                quantity = parseInt(quantity);
+            } catch (err) {
+                return res
+                    .status(400)
+                    .json({
+                        statusCode: "400",
+                        message: `err : ${err}`
+                    });
+            }
+
+        }
         let itemFind = await items.findOne({ id: id }).exec();
         if (itemFind) {
             let userFind = await users.findOne({ "eth_address": eth_address }).exec();
-            let filter = userFind.item.find(item =>
-                item.id.toString() == itemFind._id.toString()
-            )
-            if (filter) {
-                await users.updateOne(
-                    {
-                        "eth_address": eth_address,
-                        "item.id": itemFind._id
-                    },
-                    {
-                        $set: {
-                            "item.$.quantity": filter.quantity + quantity,
-                            lastUpdate: Date.now()
-                        }
-                    }
-                ).exec()
-            } else {
-                await users.updateOne(
-                    { "eth_address": eth_address },
-                    {
-                        $push: {
-                            "item": {
-                                "id": itemFind._id,
-                                "quantity": quantity,
-                            },
-
+            if (userFind) {
+                let filter = userFind.item.find(item =>
+                    item.id.toString() == itemFind._id.toString()
+                )
+                if (filter) {
+                    await users.updateOne(
+                        {
+                            "eth_address": eth_address,
+                            "item.id": itemFind._id
                         },
-                        $set: {
-                            lastUpdate: Date.now()
+                        {
+                            $set: {
+                                "item.$.quantity": filter.quantity + quantity,
+                                lastUpdate: Date.now()
+                            }
                         }
-                    }
-                ).exec();
+                    ).exec()
+                } else {
+                    await users.updateOne(
+                        { "eth_address": eth_address },
+                        {
+                            $push: {
+                                "item": {
+                                    "id": itemFind._id,
+                                    "quantity": quantity,
+                                },
+
+                            },
+                            $set: {
+                                lastUpdate: Date.now()
+                            }
+                        }
+                    ).exec();
+                }
+                return res
+                    .status(200)
+                    .json({
+                        statusCode: "200",
+                        message: "Buy item successfully 😊 👌"
+                    });
             }
-            return res
-                .status(200)
-                .json({
-                    statusCode: "200",
-                    message: "Buy item successfully 😊 👌"
-                });
+            else {
+                return res
+                    .status(404)
+                    .json({
+                        statusCode: "404",
+                        message: "Get user Not Foud",
+                        result: null
+                    });
+            }
+
         } else {
             return res
                 .status(404)

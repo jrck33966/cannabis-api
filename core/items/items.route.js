@@ -16,6 +16,10 @@ router.get("/:type", [
     authorization, controller.getItem
 ]);
 
+router.post("/getbyuser", [
+    authorization, controller.getItemByUser
+]);
+
 router.put("/", [
     authorizationAdmin,
     upload.single('img'),
