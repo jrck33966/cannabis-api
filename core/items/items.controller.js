@@ -8,6 +8,7 @@ var ip = require("ip");
 const util = require('util')
 var ObjectId = require('mongoose').Types.ObjectId;
 var autoIncrement = require("mongodb-autoincrement");
+var logger = require('../../config/configLog')
 
 // exports.addItem = async (req, res) => {
 //     try {
@@ -103,6 +104,7 @@ exports.addItem = async (req, res) => {
         }
         itemModel.attribute = _ob;
         const result = await itemModel.save();
+        logger.info(`addItem success by username: ${req.id}`)
         return res
             .status(200)
             .json({
@@ -111,7 +113,7 @@ exports.addItem = async (req, res) => {
             });
     }
     catch (err) {
-        console.log(err)
+        logger.error(`addItem error: ${err}`);
         return res
             .status(400)
             .json({
@@ -164,7 +166,7 @@ exports.editItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
-        
+
         if (typeof dateUpdate != 'object') {
             dateUpdate = JSON.parse(dateUpdate);
         }
@@ -188,6 +190,7 @@ exports.editItem = async (req, res) => {
                 },
                 { upsert: 1 }
             ).exec();
+            logger.info(`editItem success by username: ${req.id}`)
             return res
                 .status(200)
                 .json({
@@ -205,6 +208,7 @@ exports.editItem = async (req, res) => {
         }
     }
     catch (err) {
+        logger.error(`addItem error: ${err}`);
         return res
             .status(400)
             .json({
@@ -233,13 +237,14 @@ exports.getItem = async (req, res) => {
                         item['imageOriginalPath'] = null
                     } else {
                         item['image'] = null
-                        delete item['imageOriginalPath']
+                        item['imageOriginalPath'] = null
                     }
                 } catch (err) {
                     console.error(err)
                 }
 
             })
+            logger.info(`getItem success by username: ${req.userId}`)
             return res
                 .status(200)
                 .json({
@@ -248,6 +253,7 @@ exports.getItem = async (req, res) => {
                     result: find,
                 });
         } else {
+            logger.warn(`addItem Get item type :${type} not foud `);
             return res
                 .status(404)
                 .json({
@@ -258,6 +264,7 @@ exports.getItem = async (req, res) => {
         }
     }
     catch (err) {
+        logger.error(`getItem error: ${err}`);
         return res
             .status(400)
             .json({
@@ -327,6 +334,7 @@ exports.getItemByUser = async (req, res) => {
                 }
 
             })
+            logger.info(`getItemByUser success by username: ${req.userId}`)
             return res
                 .status(200)
                 .json({
@@ -335,6 +343,7 @@ exports.getItemByUser = async (req, res) => {
                     result: find,
                 });
         } else {
+            logger.warn(`getItemByUser get user:${req.userId} not foud`);
             return res
                 .status(404)
                 .json({
@@ -345,6 +354,7 @@ exports.getItemByUser = async (req, res) => {
         }
     }
     catch (err) {
+        logger.error(`getItemByUser error: ${err}`);
         return res
             .status(400)
             .json({
@@ -390,6 +400,7 @@ exports.deleteItem = async (req, res) => {
             } else {
                 console.log("No documents matched the query. Deleted 0 documents.");
             }
+            logger.info(`deleteItem success by username: ${req.id}`)
             return res
                 .status(200)
                 .json({
@@ -398,6 +409,7 @@ exports.deleteItem = async (req, res) => {
                     result: `deletedCount ${result.deletedCount}`
                 });
         } else {
+            logger.warn(`deleteItem get itemId:${id} not foud`);
             return res
                 .status(404)
                 .json({
@@ -408,6 +420,7 @@ exports.deleteItem = async (req, res) => {
         }
     }
     catch (err) {
+        logger.error(`deleteItem error: ${err}`);
         return res
             .status(400)
             .json({
@@ -498,6 +511,7 @@ exports.buyItem = async (req, res) => {
                         }
                     ).exec();
                 }
+                logger.info(`buyItem ItemId:${id} success by username: ${req.userId}`)
                 return res
                     .status(200)
                     .json({
@@ -506,6 +520,7 @@ exports.buyItem = async (req, res) => {
                     });
             }
             else {
+                logger.warn(`buyItem get eth_address:${eth_address} not foud`);
                 return res
                     .status(404)
                     .json({
@@ -516,6 +531,7 @@ exports.buyItem = async (req, res) => {
             }
 
         } else {
+            logger.warn(`buyItem get itemId:${id} not foud`);
             return res
                 .status(404)
                 .json({
@@ -526,6 +542,7 @@ exports.buyItem = async (req, res) => {
         }
     }
     catch (err) {
+        logger.error(`buyItem error: ${err}`);
         return res
             .status(400)
             .json({

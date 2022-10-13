@@ -74,6 +74,7 @@ const authorization = async (req, res, next) => {
                             .json({ message: "Unauthorization" });
                     }
                 }
+                req.userId = data.id;
                 return next();
             }
         });

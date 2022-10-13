@@ -42,6 +42,7 @@ const authorization = async (req, res, next) => {
                 .json({ message: "Unauthorization" });
         }
         req.token = token;
+        req.id = 'dev'
         return next();
     } catch {
         return res.status(401)
