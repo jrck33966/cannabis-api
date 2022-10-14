@@ -253,7 +253,7 @@ exports.getItem = async (req, res) => {
                     result: find,
                 });
         } else {
-            logger.warn(`addItem Get item type :${type} not foud `);
+            logger.warn(`getItem Get item type :${type} not foud `);
             return res
                 .status(404)
                 .json({
