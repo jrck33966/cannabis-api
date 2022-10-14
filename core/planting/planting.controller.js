@@ -1,4 +1,6 @@
 var planting = require('../../model/planting.model');
+var users = require('../../model/users.model');
+var items = require('../../model/items.model')
 var ObjectId = require('mongoose').Types.ObjectId;
 var moment = require('moment');
 var logger = require('../../config/configLog')
@@ -57,15 +59,15 @@ exports.startPlanting = async (req, res) => {
                     case "1":
                         plantingModel.next_phase_datetime = new Date().addDays(1);
                         plantingModel.grow_date_phase1 = 1;
-                        plantingModel.survival_chance_phase1 = generateRandomInteger(60, 70);
+                        plantingModel.survival_chance_phase1 = generateRandomInteger(1, 1);
                         break;
                     case "2":
                         plantingModel.grow_date_phase2 = 2;
-                        plantingModel.survival_chance_phase2 = generateRandomInteger(50, 60);
+                        plantingModel.survival_chance_phase2 = generateRandomInteger(1, 1);
                         break;
                     case "3":
                         plantingModel.grow_date_phase3 = 3;
-                        plantingModel.survival_chance_phase3 = generateRandomInteger(40, 50);
+                        plantingModel.survival_chance_phase3 = generateRandomInteger(1, 2);
                         break;
                     default:
                         console.log("phase not found")
@@ -169,8 +171,48 @@ exports.getPlanting = async (req, res) => {
                                 }
                             }
                         ).exec();
+
                         //update date after calculate
-                        find['is_planting'] = is_planting;
+                        find['is_planting'] = is_planting;                    
+                        let find_user = await users.findOne({ eth_address: eth_address }).exec();
+                        let arritem_user = find_user.item;
+    
+                        // find_phase = 
+                        let find_item_planing
+                        switch (cur_phase) {
+                            case 1:
+                                find_item_planing = find['item'].filter(it => {
+                                    return it.phase == '2' || it.phase == '3'
+                                });
+                                break;
+                            case 2:
+                                find_item_planing = find['item'].filter(it => {
+                                    return it.phase == '3'
+                                });
+                                break;
+                            default:
+                                break;
+                        }
+    
+                        //update return item to user
+                        for (let arrItems of find_item_planing) {
+                            for (let itemId of arrItems['items']) {
+                                let obItemId = await items.findOne({ "id": itemId }).exec();
+                                for (let item_user of arritem_user) {
+                                    if (item_user.id.toString() == obItemId._id.toString()) {
+                                        item_user.quantity = item_user.quantity + 1;
+                                    }
+                                }
+                            }
+                        }
+                        await users.updateOne(
+                            { eth_address: eth_address },
+                            {
+                                $set: {
+                                    'item': arritem_user
+                                }
+                            }
+                        )
                     }
                 } else {
                     console.log("ยังไม่ถึงเวลา")
@@ -292,7 +334,46 @@ exports.testPlanting = async (req, res) => {
                         }
                     ).exec();
                     //update date after calculate
-                    find['is_planting'] = is_planting;
+                    find['is_planting'] = is_planting;                    
+                    let find_user = await users.findOne({ eth_address: eth_address }).exec();
+                    let arritem_user = find_user.item;
+
+                    // find_phase = 
+                    let find_item_planing
+                    switch (cur_phase) {
+                        case 1:
+                            find_item_planing = find['item'].filter(it => {
+                                return it.phase == '2' || it.phase == '3'
+                            });
+                            break;
+                        case 2:
+                            find_item_planing = find['item'].filter(it => {
+                                return it.phase == '3'
+                            });
+                            break;
+                        default:
+                            break;
+                    }
+
+                    //update return item to user
+                    for (let arrItems of find_item_planing) {
+                        for (let itemId of arrItems['items']) {
+                            let obItemId = await items.findOne({ "id": itemId }).exec();
+                            for (let item_user of arritem_user) {
+                                if (item_user.id.toString() == obItemId._id.toString()) {
+                                    item_user.quantity = item_user.quantity + 1;
+                                }
+                            }
+                        }
+                    }
+                    await users.updateOne(
+                        { eth_address: eth_address },
+                        {
+                            $set: {
+                                'item': arritem_user
+                            }
+                        }
+                    )
                 }
                 logger.info(`getPlanting phase:${cur_phase} status:${alive ? 'alive' : 'dead'} by eth_address: ${eth_address}`)
                 return res
