@@ -12,9 +12,12 @@ router.post('/', [
     controller.addItem
 ]);
 
-router.get("/:type", [
+router.get("/", [
     authorization, controller.getItem
 ]);
+// router.get("/:type", [
+//     authorization, controller.getItem
+// ]);
 
 router.post("/getbyuser", [
     authorization, controller.getItemByUser

@@ -45,6 +45,9 @@ const plantingSchema = mongoose.Schema({
     },
     is_planting: {
         type: Boolean
+    },
+    is_active: {
+        type: Boolean
     }
 }, { versionKey: false });
 

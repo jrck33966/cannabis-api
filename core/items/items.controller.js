@@ -218,14 +218,91 @@ exports.editItem = async (req, res) => {
     }
 }
 
+// exports.getItem = async (req, res) => {
+//     try {
+//         const type = req.params.type;
+//         let find;
+//         if (type == undefined || type == "" || type == "all") {
+//             find = await items.find({}, { _id: 0 }).exec();
+//         } else {
+//             find = await items.find({ type: type }, { _id: 0 }).exec();
+//         }
+//         if (find && find.length > 0) {
+//             // var imageAsBase64 = fs.readFileSync(find[0].imageOriginalPath, 'base64');
+//             find.map(item => {
+//                 try {
+//                     if (fs.existsSync(item.imageOriginalPath)) {
+//                         var imageAsBase64 = fs.readFileSync(item.imageOriginalPath, 'base64');
+//                         item['image'] = imageAsBase64
+//                         item['imageOriginalPath'] = null
+//                     } else {
+//                         item['image'] = null
+//                         item['imageOriginalPath'] = null
+//                     }
+//                 } catch (err) {
+//                     console.error(err)
+//                 }
+
+//             })
+//             logger.info(`getItem success by username: ${req.userId}`)
+//             return res
+//                 .status(200)
+//                 .json({
+//                     statusCode: "200",
+//                     message: "Get item successfully 😊 👌",
+//                     result: find,
+//                 });
+//         } else {
+//             logger.warn(`getItem Get item type :${type} not foud `);
+//             return res
+//                 .status(404)
+//                 .json({
+//                     statusCode: "404",
+//                     message: "Get item not foud",
+//                     result: []
+//                 });
+//         }
+//     }
+//     catch (err) {
+//         logger.error(`getItem error: ${err}`);
+//         return res
+//             .status(400)
+//             .json({
+//                 statusCode: "400",
+//                 message: `err : ${err}`
+//             });
+//     }
+// }
+
 exports.getItem = async (req, res) => {
     try {
-        const type = req.params.type;
+        const query = req.query;
+        let type = query.type
+        let id = query.id;
         let find;
-        if (type == undefined || type == "" || type == "all") {
+        if ((type == undefined || type == '') && (id == undefined || id == '')) {
             find = await items.find({}, { _id: 0 }).exec();
-        } else {
+        } else if ((type != undefined && type != '') && (id != undefined && id != '')) {
+            find = await items.aggregate([
+                {
+                    $match: {
+                        $and:
+                            [
+                                { id: id },
+                                { type: type }
+                            ]
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0
+                    }
+                }
+            ]).exec();
+        } else if (type != undefined && type != '') {
             find = await items.find({ type: type }, { _id: 0 }).exec();
+        } else if (id != undefined && id != '') {
+            find = await items.find({ id: id }, { _id: 0 }).exec();
         }
         if (find && find.length > 0) {
             // var imageAsBase64 = fs.readFileSync(find[0].imageOriginalPath, 'base64');
@@ -253,7 +330,7 @@ exports.getItem = async (req, res) => {
                     result: find,
                 });
         } else {
-            logger.warn(`getItem Get item type :${type} not foud `);
+            logger.warn(`getItem Get item not foud `);
             return res
                 .status(404)
                 .json({
