@@ -43,8 +43,21 @@ const plantingSchema = mongoose.Schema({
     production_quality: {
         type: Number
     },
+    start_planting_date: {
+        type: Date
+    },
+    harvest_date:{
+        type: Date
+    },
+    fail_date:{
+        type: Date
+    },
+    // - is_planting type
+    // - planting = กำลังโต 
+    // - failed = ตาย
+    // - harvested = เก็บเกี่ยวแล้ว
     is_planting: {
-        type: Boolean
+        type:  String
     },
     is_active: {
         type: Boolean

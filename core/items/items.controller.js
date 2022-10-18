@@ -278,6 +278,7 @@ exports.getItem = async (req, res) => {
     try {
         const query = req.query;
         let type = query.type
+        let typeUpper =  new RegExp(["^", type, "$"].join(""), "i");
         let id = query.id;
         let find;
         if ((type == undefined || type == '') && (id == undefined || id == '')) {
@@ -289,7 +290,7 @@ exports.getItem = async (req, res) => {
                         $and:
                             [
                                 { id: id },
-                                { type: type }
+                                { type: typeUpper }
                             ]
                     }
                 },
@@ -300,7 +301,7 @@ exports.getItem = async (req, res) => {
                 }
             ]).exec();
         } else if (type != undefined && type != '') {
-            find = await items.find({ type: type }, { _id: 0 }).exec();
+            find = await items.find({ type: typeUpper }, { _id: 0 }).exec();
         } else if (id != undefined && id != '') {
             find = await items.find({ id: id }, { _id: 0 }).exec();
         }
