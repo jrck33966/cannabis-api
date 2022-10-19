@@ -71,12 +71,12 @@ exports.addItem = async (req, res) => {
             price, use_type, quantity, phase_use,
             description, attribute } = req.body;
         let img_filename = "";
+        await checkDir();
         let idImage = await getNextSequence();
         if (req.file) {
             const { filename } = req.file;
             let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
-            img_filename = `${idImage}_${makeNameImage(5)}.${typeFile}`;
-            await checkDir();
+            img_filename = `${idImage}_${makeNameImage(5)}.${typeFile}`;        
             const move = path.resolve(__dirname, config.pathImg.pathItem);
             fs.renameSync(`${req.file.destination}/${filename}`, `${move}/${img_filename}`);
         }
@@ -127,9 +127,9 @@ const getNextSequence = async () => {
 
 
 const checkDir = async () => {
-    fs.exists(path.resolve(__dirname, config.pathImg.pathItem), function (exists) {
+    return fs.exists(path.resolve(__dirname, config.pathImg.pathItem), function (exists) {
         if (!exists) {
-            fs.mkdir(path.resolve(__dirname, config.pathImg.pathItem), { recursive: true }, function (err) {
+            fs.mkdirSync(path.resolve(__dirname, config.pathImg.pathItem), { recursive: true }, function (err) {
                 if (err) {
                     console.log(err)
                 }
@@ -143,6 +143,8 @@ exports.editItem = async (req, res) => {
         const { id } = req.body;
         let img_filename = "";
         let dateUpdate = req.body;
+        let d = await checkDir();
+        console.log(d)
         if (id == undefined || id == "") {
             return res
                 .status(400)
@@ -151,11 +153,11 @@ exports.editItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
+       
         if (req.file) {
             const { filename } = req.file;
             let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
             img_filename = `${dateUpdate.id}_${makeNameImage(5)}.${typeFile}`;
-            await checkDir();
             const move = path.resolve(__dirname, config.pathImg.pathItem);
             fs.renameSync(`${req.file.destination}/${filename}`, `${move}/${img_filename}`);
         }
