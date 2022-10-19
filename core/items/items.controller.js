@@ -71,21 +71,18 @@ exports.addItem = async (req, res) => {
             price, use_type, quantity, phase_use,
             description, attribute } = req.body;
         let img_filename = "";
+        let idImage = await getNextSequence();
         if (req.file) {
             const { filename } = req.file;
-            img_filename = filename;
+            let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+            img_filename = `${idImage}_${makeNameImage(5)}.${typeFile}`;
             await checkDir();
-            await sharp(req.file.path)
-                .resize(500, 500)
-                .jpeg({ quality: 90 })
-                .toFile(
-                    path.resolve(req.file.destination, '../img-items', filename)
-                )
-            fs.unlinkSync(req.file.path)
+            const move = path.resolve(__dirname, config.pathImg.pathItem);
+            fs.renameSync(`${req.file.destination}/${filename}`, `${move}/${img_filename}`);
         }
         let originalPath = img_filename == (undefined || null || "") ? null : path.resolve(req.file.destination, '../img-items', img_filename)
         var itemModel = new items();
-        itemModel.id = await getNextSequence();
+        itemModel.id = idImage;
         itemModel.image = img_filename == (undefined || null || "") ? null : `${ip.address()}:3000/image/${img_filename}`;
         itemModel.type = type == undefined ? null : type;
         itemModel.name = name == undefined ? null : name;
@@ -146,18 +143,6 @@ exports.editItem = async (req, res) => {
         const { id } = req.body;
         let img_filename = "";
         let dateUpdate = req.body;
-        if (req.file) {
-            const { filename } = req.file;
-            img_filename = `${dateUpdate.id}_${filename}`;
-            await checkDir();
-            await sharp(req.file.path)
-                .resize(500, 500)
-                .jpeg({ quality: 90 })
-                .toFile(
-                    path.resolve(req.file.destination, '../img-items', img_filename)
-                )
-            fs.unlinkSync(req.file.path)
-        }
         if (id == undefined || id == "") {
             return res
                 .status(400)
@@ -166,7 +151,14 @@ exports.editItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
-
+        if (req.file) {
+            const { filename } = req.file;
+            let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+            img_filename = `${dateUpdate.id}_${makeNameImage(5)}.${typeFile}`;
+            await checkDir();
+            const move = path.resolve(__dirname, config.pathImg.pathItem);
+            fs.renameSync(`${req.file.destination}/${filename}`, `${move}/${img_filename}`);
+        }
         if (typeof dateUpdate != 'object') {
             dateUpdate = JSON.parse(dateUpdate);
         }
@@ -278,7 +270,7 @@ exports.getItem = async (req, res) => {
     try {
         const query = req.query;
         let type = query.type
-        let typeUpper =  new RegExp(["^", type, "$"].join(""), "i");
+        let typeUpper = new RegExp(["^", type, "$"].join(""), "i");
         let id = query.id;
         let find;
         if ((type == undefined || type == '') && (id == undefined || id == '')) {
@@ -354,9 +346,10 @@ exports.getItem = async (req, res) => {
 
 exports.getItemByUser = async (req, res) => {
     try {
-        const id = req.userId
+        // const id = req.userId
+        const { eth_address } = req.body
         let find = await users.aggregate([
-            { $match: { _id: ObjectId(id) } },
+            { $match: { eth_address: eth_address } },
             { $unwind: "$item" },
             {
                 $lookup: {
@@ -628,4 +621,14 @@ exports.buyItem = async (req, res) => {
                 message: `err : ${err}`
             });
     }
+}
+
+function makeNameImage(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
 }
