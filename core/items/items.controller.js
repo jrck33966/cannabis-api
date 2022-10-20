@@ -76,7 +76,7 @@ exports.addItem = async (req, res) => {
         if (req.file) {
             const { filename } = req.file;
             let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
-            img_filename = `${idImage}_${makeNameImage(5)}.${typeFile}`;        
+            img_filename = `${idImage}_${makeNameImage(5)}.${typeFile}`;
             const move = path.resolve(__dirname, config.pathImg.pathItem);
             fs.renameSync(`${req.file.destination}/${filename}`, `${move}/${img_filename}`);
         }
@@ -153,7 +153,7 @@ exports.editItem = async (req, res) => {
                     statusCode: "400",
                 });
         }
-       
+
         if (req.file) {
             const { filename } = req.file;
             let typeFile = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
@@ -271,12 +271,17 @@ exports.editItem = async (req, res) => {
 exports.getItem = async (req, res) => {
     try {
         const query = req.query;
+        const page = query.page || 1;
+        const limit = query.limit || 10;
         let type = query.type
         let typeUpper = new RegExp(["^", type, "$"].join(""), "i");
         let id = query.id;
         let find;
         if ((type == undefined || type == '') && (id == undefined || id == '')) {
-            find = await items.find({}, { _id: 0 }).exec();
+            find = await items.find({}, { _id: 0 })
+                .skip(calSkip(page, limit))
+                .limit(limit)
+                .exec();
         } else if ((type != undefined && type != '') && (id != undefined && id != '')) {
             find = await items.aggregate([
                 {
@@ -293,14 +298,22 @@ exports.getItem = async (req, res) => {
                         _id: 0
                     }
                 }
-            ]).exec();
+            ])
+                .skip(calSkip(page, limit))
+                .limit(limit)
+                .exec();
         } else if (type != undefined && type != '') {
-            find = await items.find({ type: typeUpper }, { _id: 0 }).exec();
+            find = await items.find({ type: typeUpper }, { _id: 0 })
+                .skip(calSkip(page, limit))
+                .limit(limit)
+                .exec();
         } else if (id != undefined && id != '') {
-            find = await items.find({ id: id }, { _id: 0 }).exec();
+            find = await items.find({ id: id }, { _id: 0 })
+                .skip(calSkip(page, limit))
+                .limit(limit)
+                .exec();
         }
         if (find && find.length > 0) {
-            // var imageAsBase64 = fs.readFileSync(find[0].imageOriginalPath, 'base64');
             find.map(item => {
                 try {
                     if (fs.existsSync(item.imageOriginalPath)) {
@@ -316,12 +329,15 @@ exports.getItem = async (req, res) => {
                 }
 
             })
+            const count = await items.countDocuments().exec()
             logger.info(`getItem success by username: ${req.userId}`)
             return res
                 .status(200)
                 .json({
                     statusCode: "200",
                     message: "Get item successfully 😊 👌",
+                    currentPage: page,
+                    pages: calPage(count, limit),
                     result: find,
                 });
         } else {
@@ -345,6 +361,14 @@ exports.getItem = async (req, res) => {
             });
     }
 }
+
+const calSkip = (page, size) => {
+    return (page - 1) * size;
+};
+
+const calPage = (count, size) => {
+    return Math.ceil(count / size);
+};
 
 exports.getItemByUser = async (req, res) => {
     try {
