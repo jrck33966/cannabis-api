@@ -271,17 +271,12 @@ exports.editItem = async (req, res) => {
 exports.getItem = async (req, res) => {
     try {
         const query = req.query;
-        const page = query.page || 1;
-        const limit = query.limit || 10;
         let type = query.type
         let typeUpper = new RegExp(["^", type, "$"].join(""), "i");
         let id = query.id;
         let find;
         if ((type == undefined || type == '') && (id == undefined || id == '')) {
-            find = await items.find({}, { _id: 0 })
-                .skip(calSkip(page, limit))
-                .limit(limit)
-                .exec();
+            find = await items.find({}, { _id: 0 }).exec();
         } else if ((type != undefined && type != '') && (id != undefined && id != '')) {
             find = await items.aggregate([
                 {
@@ -298,20 +293,11 @@ exports.getItem = async (req, res) => {
                         _id: 0
                     }
                 }
-            ])
-                .skip(calSkip(page, limit))
-                .limit(limit)
-                .exec();
+            ]).exec();
         } else if (type != undefined && type != '') {
-            find = await items.find({ type: typeUpper }, { _id: 0 })
-                .skip(calSkip(page, limit))
-                .limit(limit)
-                .exec();
+            find = await items.find({ type: typeUpper }, { _id: 0 }).exec();
         } else if (id != undefined && id != '') {
-            find = await items.find({ id: id }, { _id: 0 })
-                .skip(calSkip(page, limit))
-                .limit(limit)
-                .exec();
+            find = await items.find({ id: id }, { _id: 0 }).exec();
         }
         if (find && find.length > 0) {
             find.map(item => {
@@ -329,15 +315,12 @@ exports.getItem = async (req, res) => {
                 }
 
             })
-            const count = await items.countDocuments().exec()
             logger.info(`getItem success by username: ${req.userId}`)
             return res
                 .status(200)
                 .json({
                     statusCode: "200",
                     message: "Get item successfully 😊 👌",
-                    currentPage: page,
-                    pages: calPage(count, limit),
                     result: find,
                 });
         } else {
@@ -361,14 +344,6 @@ exports.getItem = async (req, res) => {
             });
     }
 }
-
-const calSkip = (page, size) => {
-    return (page - 1) * size;
-};
-
-const calPage = (count, size) => {
-    return Math.ceil(count / size);
-};
 
 exports.getItemByUser = async (req, res) => {
     try {
