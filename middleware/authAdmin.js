@@ -21,7 +21,7 @@ const authorization = async (req, res, next) => {
             return res.status(401)
                 .json({ message: "Unauthorization" });
         }
-        let r = await bcrypt.compare('dev', data.id)
+        let r = await bcrypt.compare(config.admin.username, data.id)
         if (!r) {
             return res.status(401)
                 .json({ message: "Unauthorization" });
@@ -42,7 +42,7 @@ const authorization = async (req, res, next) => {
                 .json({ message: "Unauthorization" });
         }
         req.token = token;
-        req.id = 'dev'
+        req.id = config.admin.username;
         return next();
     } catch {
         return res.status(401)

@@ -5,5 +5,6 @@ var authorizationAdmin = require("../../middleware/authAdmin");
 
 router.post('/login',controller.adminLogin);
 router.post('/logout',authorizationAdmin,controller.adminlogout);
+router.post('/refreshtoken',controller.refreshToken);
 
 module.exports = router;

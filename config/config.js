@@ -14,8 +14,13 @@ const config = {
       pathTmp :"../upload/tmp",
       pathItem : "../../upload/img-items",
     },
+    admin:{
+      username: "dev",
+      password: "dev"
+    },    
     jwtSecret : "cain-api-dev",
     jwtSecretAdmin : "cain-api-admin",
+    jwtRefreshSecretAdmin : "cain-api-refresh-admin",
    };
    
    
