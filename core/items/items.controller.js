@@ -562,6 +562,7 @@ exports.buyItem = async (req, res) => {
                         {
                             $set: {
                                 "item.$.quantity": filter.quantity + quantity,
+                                buy_Date: Date.now(),
                                 lastUpdate: Date.now()
                             }
                         }
@@ -578,6 +579,7 @@ exports.buyItem = async (req, res) => {
 
                             },
                             $set: {
+                                buy_Date: Date.now(),
                                 lastUpdate: Date.now()
                             }
                         }
