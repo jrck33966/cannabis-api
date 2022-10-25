@@ -1,5 +1,6 @@
-var items = require('../../model/items.model');
-var users = require('../../model/users.model')
+const items = require('../../model/items.model');
+const users = require('../../model/users.model');
+const income = require('../../model/income.model');
 var fs = require('fs');
 const sharp = require('sharp');
 const path = require('path');
@@ -585,6 +586,17 @@ exports.buyItem = async (req, res) => {
                         }
                     ).exec();
                 }
+
+                let newIncome = new income()
+                newIncome.eth_address = eth_address;
+                newIncome.itemId = id;
+                newIncome.quantity = quantity;
+                newIncome.Total_price = parseInt(itemFind.price) * parseInt(quantity);
+                newIncome.buy_Date = Date.now();
+
+                await income.create(newIncome);
+ 
+
                 logger.info(`buyItem ItemId:${id} success by username: ${req.userId}`)
                 return res
                     .status(200)
