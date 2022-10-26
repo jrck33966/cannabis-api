@@ -10,6 +10,7 @@ const util = require('util')
 var ObjectId = require('mongoose').Types.ObjectId;
 var autoIncrement = require("mongodb-autoincrement");
 var logger = require('../../config/configLog')
+const moment = require('moment');
 
 // exports.addItem = async (req, res) => {
 //     try {
@@ -591,8 +592,9 @@ exports.buyItem = async (req, res) => {
                 newIncome.eth_address = eth_address;
                 newIncome.itemId = id;
                 newIncome.quantity = quantity;
-                newIncome.Total_price = parseInt(itemFind.price) * parseInt(quantity);
-                newIncome.buy_Date = Date.now();
+                newIncome.total_price = parseInt(itemFind.price) * parseInt(quantity);
+                let date = moment(moment(Date.now()).format('YYYYMMDDHHmmssZZ'),"YYYYMMDDHHmmssZZ")
+                newIncome.buy_date = date;
 
                 await income.create(newIncome);
  

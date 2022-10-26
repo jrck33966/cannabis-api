@@ -10,6 +10,7 @@ var users = require("./core/users/users.route")
 var items = require("./core/items/items.route")
 var image = require("./core/image/image.route")
 var planting = require("./core/planting/planting.route")
+var reporting = require("./core/reporting/reporting.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
@@ -26,12 +27,13 @@ app.use('/user', users)
 app.use('/item', items)
 app.use('/planting', planting)
 app.use('/image', image)
+app.use('/reporting', reporting)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
-// app.use(function (req, res, next) {
-//     res.status(500).send("Sorry Server!")
-// })
+app.use(function (req, res, next) {
+    res.status(500).send("Internal Server error")
+})
 
 
 app.listen(config.app.port, async () => {

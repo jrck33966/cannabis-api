@@ -16,10 +16,10 @@ const IncomeSchema = mongoose.Schema({
         type: Number,
         required: true
     },
-    Total_price: {
+    total_price: {
         type: Number
     },
-    buy_Date: {
+    buy_date: {
         type: Date
     }
 }, { versionKey: false });
