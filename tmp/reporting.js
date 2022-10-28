@@ -33,6 +33,9 @@ db.getCollection('cannabis_income').aggregate(
                      $replaceRoot: {
                             newRoot: "$doc"
                      }
+              },
+              {
+                $addFields: { day: { $dayOfMonth: "$buy_date" }}
               }
        ]
 )
