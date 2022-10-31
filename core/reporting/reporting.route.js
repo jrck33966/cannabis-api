@@ -4,6 +4,6 @@ var controller = require("./reporting.controller")
 var authorizationAdmin = require("../../middleware/authAdmin");
 
 router.post('/',authorizationAdmin,controller.get);
-router.post('/month',controller.getMonth);
+router.post('/month',authorizationAdmin,controller.getMonth);
 
 module.exports = router;
