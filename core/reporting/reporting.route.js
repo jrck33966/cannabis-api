@@ -3,7 +3,7 @@ var router = express.Router();
 var controller = require("./reporting.controller")
 var authorizationAdmin = require("../../middleware/authAdmin");
 
-router.post('/',authorizationAdmin,controller.get);
-router.post('/month',authorizationAdmin,controller.getMonth);
+router.post('/date',authorizationAdmin,controller.getByDay);
+router.post('/month',authorizationAdmin,controller.getByMonth);
 
 module.exports = router;

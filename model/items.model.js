@@ -25,11 +25,11 @@ const ItemSchema = mongoose.Schema({
     use_type: {
         type: String
     },
-    quantity: {
+    quantity_user: {
         type: Number
     },
     phase_use: {
-        type: Array
+        type: Boolean
     },
     description: {
         type: String

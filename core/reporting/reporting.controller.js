@@ -5,7 +5,7 @@ const items = require('../../model/items.model');
 const logger = require('../../config/configLog');
 const ObjectId = require('mongoose').Types.ObjectId;
 
-exports.get = async (req, res) => {
+exports.getByDay = async (req, res) => {
     try {
         const { date } = req.body;
         let strDate = date;
@@ -91,7 +91,7 @@ exports.get = async (req, res) => {
 
 };
 
-exports.getMonth = async (req, res) => {
+exports.getByMonth = async (req, res) => {
     try {
         const { month, year } = req.body;
 

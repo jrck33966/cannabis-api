@@ -21,6 +21,16 @@ exports.startPlanting = async (req, res) => {
                     result: []
                 });
         }
+        if(user_find['item'].length <= 0) {
+            logger.warn(`getPlanting user eth_address : ${eth_address} has no item.`);
+            return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `ERROR : user eth_address : ${eth_address} has no item.`,
+            });
+        }
+
         let flag_seed = false;
         let flag_error = false;
         let msg_error = [];

@@ -70,7 +70,7 @@ const moment = require('moment');
 exports.addItem = async (req, res) => {
     try {
         const { image, type, name, rarity,
-            price, use_type, quantity, phase_use,
+            price, use_type, quantity_user, phase_use,
             description, attribute } = req.body;
         let img_filename = "";
         await checkDir();
@@ -91,7 +91,7 @@ exports.addItem = async (req, res) => {
         itemModel.rarity = rarity == undefined ? null : rarity;
         itemModel.price = price == undefined ? null : price;
         itemModel.use_type = use_type == undefined ? null : use_type;
-        itemModel.quantity = quantity == undefined ? null : quantity;
+        itemModel.quantity_user = quantity_user == undefined ? null : quantity_user;
         itemModel.phase_use = phase_use == undefined ? null : phase_use;
         itemModel.description = description == undefined ? null : description;
         itemModel.imageOriginalPath = originalPath;
