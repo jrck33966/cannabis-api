@@ -177,7 +177,16 @@ exports.editItem = async (req, res) => {
                     fs.unlinkSync(find.imageOriginalPath)
                 }
             }
-
+            if (dateUpdate['attribute']) {
+                let _ob;
+                if (typeof (dateUpdate['attribute']) === 'string' || dateUpdate['attribute'] instanceof String) {
+                    console.log("here")
+                    _ob = JSON.parse(dateUpdate['attribute'])
+                } else {
+                    _ob = attribute;
+                }
+                dateUpdate['attribute'] = _ob;
+            }
             delete dateUpdate.id;
             items.updateOne(
                 { "_id": ObjectId(find._id) },
@@ -593,11 +602,11 @@ exports.buyItem = async (req, res) => {
                 newIncome.itemId = id;
                 newIncome.quantity = quantity;
                 newIncome.total_price = parseInt(itemFind.price) * parseInt(quantity);
-                let date = moment(moment(Date.now()).format('YYYYMMDDHHmmssZZ'),"YYYYMMDDHHmmssZZ")
+                let date = moment(moment(Date.now()).format('YYYYMMDDHHmmssZZ'), "YYYYMMDDHHmmssZZ")
                 newIncome.buy_date = date;
 
                 await income.create(newIncome);
- 
+
 
                 logger.info(`buyItem ItemId:${id} success by username: ${req.userId}`)
                 return res
