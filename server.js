@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const app = express()
 var bodyParser = require('body-parser')
 var cors = require('cors')
+require("dotenv").config();
 
 var admin = require("./core/admin/admin.route")
 var login = require("./core/login/longin.route")
@@ -11,10 +12,12 @@ var items = require("./core/items/items.route")
 var image = require("./core/image/image.route")
 var planting = require("./core/planting/planting.route")
 var reporting = require("./core/reporting/reporting.route")
+var nft = require("./core/NFT/nft.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
 var logger = require('./config/configLog')
+
 
 app.use(cors({origin:true,credentials: true}));
 app.use(express.json());
@@ -28,6 +31,7 @@ app.use('/item', items)
 app.use('/planting', planting)
 app.use('/image', image)
 app.use('/reporting', reporting)
+app.use('/nft', nft)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!")
 })
