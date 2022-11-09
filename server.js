@@ -12,7 +12,7 @@ var items = require("./core/items/items.route")
 var image = require("./core/image/image.route")
 var planting = require("./core/planting/planting.route")
 var reporting = require("./core/reporting/reporting.route")
-var nft = require("./core/NFT/nft.route")
+var nft = require("./core/nft/nft.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")

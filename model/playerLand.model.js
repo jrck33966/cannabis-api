@@ -19,7 +19,7 @@ const PlayerLandSchema = mongoose.Schema({
         type: Date
     },
     rent_price_rate: {
-        type: mongoose.Types.Decimal128
+        type: Number
     }
 }, { versionKey: false });
 
