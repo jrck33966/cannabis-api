@@ -1,4 +1,8 @@
 let ms = require('ms');
+const path = require('path');
+const fs = require('fs');
+const privateKey = fs.readFileSync(path.resolve(__dirname, '../../key') + '/private.key', 'utf8');
+const publicKey = fs.readFileSync(path.resolve(__dirname, '../../key') + '/public.key', 'utf8');
 const jwt = require("jsonwebtoken");
 const config = require("../../config/config");
 const bcrypt = require('bcrypt');
@@ -8,6 +12,7 @@ var ObjectId = require('mongoose').Types.ObjectId;
 
 exports.adminLogin = async (req, res) => {
     try {
+
         const { username, password } = req.body;
         if (username == undefined || username == "") {
             logger.warn('adminLogin ValidationError: username: Path `username` is required.')
@@ -43,8 +48,10 @@ exports.adminLogin = async (req, res) => {
 
         const token = jwt.sign(
             { id: hash, role: "god" },
-            config.jwtSecretAdmin,
-            { expiresIn: exp, algorithm: 'HS384' }
+            // config.jwtSecretAdmin,
+            // { expiresIn: exp, algorithm: 'HS384' }
+            privateKey,
+            { expiresIn: exp, algorithm: 'RS256' }
         );
 
         const refresh_token = jwt.sign(
@@ -130,13 +137,13 @@ exports.refreshToken = (req, res) => {
                     refresh_token: refresh_token,
                     revoke: false
                 }).exec();
-                
+
                 if (!find) {
                     return res.status(401)
                         .json({ message: "Unauthorization" });
                 }
 
-                let jwtAdmin = jwt.verify(decoded.token, config.jwtSecretAdmin);
+                let jwtAdmin = jwt.verify(decoded.token, publicKey);
                 let r = await bcrypt.compare(config.admin.username, jwtAdmin.id)
                 if (!r) {
                     return res.status(401)
@@ -148,8 +155,10 @@ exports.refreshToken = (req, res) => {
 
                 const _token = jwt.sign(
                     { id: hash, role: "god" },
-                    config.jwtSecretAdmin,
-                    { expiresIn: exp, algorithm: 'HS384' }
+                    // config.jwtSecretAdmin,
+                    // { expiresIn: exp, algorithm: 'HS384' }
+                    privateKey,
+                    { expiresIn: exp, algorithm: 'RS256' }
                 );
 
                 const _refresh_token = jwt.sign(

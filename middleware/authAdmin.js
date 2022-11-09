@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+const publicKey = fs.readFileSync(path.resolve(__dirname, '../key') + '/public.key', 'utf8');
 const jwt = require("jsonwebtoken");
 var config = require('../config/config')
 const bcrypt = require('bcrypt');
@@ -16,7 +19,11 @@ const authorization = async (req, res, next) => {
             return res.status(401)
                 .json({ message: "Unauthorization" });
         }
-        const data = jwt.verify(token, config.jwtSecretAdmin);
+        const data = jwt.verify(
+            token,
+            // config.jwtSecretAdmin
+            publicKey
+        );
         if (data.role != "god") {
             return res.status(401)
                 .json({ message: "Unauthorization" });

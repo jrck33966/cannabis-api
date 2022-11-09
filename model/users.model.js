@@ -11,6 +11,9 @@ const UserSchema = mongoose.Schema({
     item: {
         type: Array
     },
+    player_land: {
+        type: Array
+    },
     attribute: {
         type: Object
     },

@@ -1,3 +1,6 @@
+const path = require('path');
+const fs = require('fs');
+const publicKey = fs.readFileSync(path.resolve(__dirname, '../key') + '/public.key', 'utf8');
 const jwt = require("jsonwebtoken");
 var users = require('../model/users.model');
 var ObjectId = require('mongoose').Types.ObjectId;
@@ -19,65 +22,68 @@ const authorization = async (req, res, next) => {
             return res.status(401)
                 .json({ message: "Unauthorization" });
         }
-        jwt.verify(token, config.jwtSecretAdmin, async (err, data) => {
-            if (err) {
-                try {
-                    let users_data = jwt.verify(token, config.jwtSecret);
-                    let exp = users_data.exp;
+        jwt.verify(token,
+            // config.jwtSecretAdmin,
+            publicKey,
+            async (err, data) => {
+                if (err) {
+                    try {
+                        let users_data = jwt.verify(token, config.jwtSecret);
+                        let exp = users_data.exp;
+                        if (Date.now() >= exp * 1000) {
+                            return res.status(401)
+                                .json({ message: "Unauthorization" });
+                        }
+                        let find = await users.findOne({ id: ObjectId(users_data.id) }).exec();
+                        if (!find) {
+                            return res.status(401)
+                                .json({ message: "Unauthorization" });
+                        }
+                        let usersMongo = await users_token.findOne({ token: token }).exec();
+                        if (usersMongo) {
+                            if (usersMongo.revoke) {
+                                return res.status(401)
+                                    .json({ message: "Unauthorization" });
+                            }
+                            else if (Date.now() >= usersMongo.expiresIn) {
+                                return res.status(401)
+                                    .json({ message: "Unauthorization" });
+                            }
+                        }
+                        req.userId = users_data.id;
+                        req.token = token;
+                        return next();
+                    } catch {
+                        return res.status(401)
+                            .json({ message: "Unauthorization" });
+                    }
+
+                } else {
+                    let r = await bcrypt.compare(config.admin.username, data.id)
+                    if (!r) {
+                        return res.status(401)
+                            .json({ message: "Unauthorization" });
+                    }
+                    let exp = data.exp;
                     if (Date.now() >= exp * 1000) {
                         return res.status(401)
                             .json({ message: "Unauthorization" });
                     }
-                    let find = await users.findOne({ id: ObjectId(users_data.id) }).exec();
-                    if (!find) {
-                        return res.status(401)
-                            .json({ message: "Unauthorization" });
-                    }
-                    let usersMongo = await users_token.findOne({ token: token }).exec();
-                    if (usersMongo) {
-                        if (usersMongo.revoke) {
+                    let adminMongo = await admin_token.findOne({ token: token }).exec();
+                    if (adminMongo) {
+                        if (adminMongo.revoke) {
                             return res.status(401)
                                 .json({ message: "Unauthorization" });
                         }
-                        else if (Date.now() >= usersMongo.expiresIn) {
+                        else if (Date.now() >= adminMongo.expiresIn) {
                             return res.status(401)
                                 .json({ message: "Unauthorization" });
                         }
                     }
-                    req.userId = users_data.id;
-                    req.token = token;
+                    req.userId = data.id;
                     return next();
-                } catch {
-                    return res.status(401)
-                        .json({ message: "Unauthorization" });
                 }
-
-            } else {
-                let r = await bcrypt.compare(config.admin.username, data.id)
-                if (!r) {
-                    return res.status(401)
-                        .json({ message: "Unauthorization" });
-                }
-                let exp = data.exp;
-                if (Date.now() >= exp * 1000) {
-                    return res.status(401)
-                        .json({ message: "Unauthorization" });
-                }
-                let adminMongo = await admin_token.findOne({ token: token }).exec();
-                if (adminMongo) {
-                    if (adminMongo.revoke) {
-                        return res.status(401)
-                            .json({ message: "Unauthorization" });
-                    }
-                    else if (Date.now() >= adminMongo.expiresIn) {
-                        return res.status(401)
-                            .json({ message: "Unauthorization" });
-                    }
-                }
-                req.userId = data.id;
-                return next();
-            }
-        });
+            });
     } catch (e) {
         return res.status(401)
             .json({ message: "Unauthorization" });

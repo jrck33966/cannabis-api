@@ -1,9 +1,9 @@
 var express = require('express')
 var router = express.Router();
-var controllerMint = require("./mint.controller")
-var authorization = require("../../middleware/auth");
+var controller = require("./nft.controller")
+var authorization = require("../../middleware/authAdmin");
 
-router.post('/mint', controllerMint.mint);
-
+router.post('/mint',authorization, controller.mint);
+router.post('/set-uri',authorization, controller.setUrl);
 
 module.exports = router;
