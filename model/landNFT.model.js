@@ -8,7 +8,7 @@ const LandNFTSchema = mongoose.Schema({
     },
     name: {
         type: String
-        
+
     },
     image: {
         type: String
@@ -18,6 +18,9 @@ const LandNFTSchema = mongoose.Schema({
     },
     attributes: {
         type: Object
+    },
+    count: {
+        type: Number
     }
 }, { versionKey: false });
 

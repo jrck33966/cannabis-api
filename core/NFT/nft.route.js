@@ -5,7 +5,7 @@ var authorizationAdmin = require("../../middleware/authAdmin");
 var authorization = require("../../middleware/auth");
 
 router.get('/land-nft', authorization, controller.getLandNFT);
-router.post('/add-nft-to-user', authorization, controller.addNFTToUser);
+router.post('/add-player-land', authorization, controller.addPlayerLand);
 router.post('/getbyuser', authorization, controller.getByUser);
 
 // smart Contract

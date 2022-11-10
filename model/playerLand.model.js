@@ -2,12 +2,16 @@ const mongoose = require('mongoose');
 var config = require('../config/config');
 
 const PlayerLandSchema = mongoose.Schema({
+    land_id: {
+        type: String,
+        required: true
+    },
     token_id: {
         type: String,
         required: true
     },
     status: {
-        type: String       
+        type: String
     },
     is_rent: {
         type: Boolean

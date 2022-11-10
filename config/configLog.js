@@ -1,15 +1,17 @@
 const winston = require('winston');
 const path = require('path');
-let moment = require('moment');
+var moment = require('moment-timezone');
 
-let folderWithDate =  moment(Date.now()).format('YYYYMMDD')
+
+let folderWithDate =  moment().tz("Asia/Bangkok").format('YYYYMMDD')
+const tsFormat = () => moment().tz("Asia/Bangkok").format('YYYY-MM-DD HH:mm:ss').trim();
 
 const createLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.label({ label: path.basename(process.mainModule.filename) }),
     winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
+      format: tsFormat
     }),
     winston.format.printf(info => `${info.timestamp} [${info.label}] ${info.level} : ${info.message}`)
   ),
