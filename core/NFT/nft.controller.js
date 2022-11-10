@@ -175,6 +175,14 @@ exports.addPlayerLand = async (req, res) => {
                 });
         }
         //<-- Check & Add NFT Land ->
+
+        let land_nft_object = meta_data;
+        if (typeof (land_nft_object) === 'string' || land_nft_object instanceof String) {
+            land_nft_object = JSON.parse(land_nft_object);
+        } else {
+            land_nft_object = land_nft_object;
+        }
+
         let find_nft = await landNFT.findOne({ token_id: token_id }).exec();
         if (find_nft) {
             await landNFT.updateOne(
@@ -188,12 +196,7 @@ exports.addPlayerLand = async (req, res) => {
                 }
             ).exec()
         } else {
-            let land_nft_object = meta_data;
-            if (typeof (land_nft_object) === 'string' || land_nft_object instanceof String) {
-                land_nft_object = JSON.parse(land_nft_object);
-            } else {
-                land_nft_object = land_nft_object;
-            }
+
             land_nft_object['token_id'] = token_id;
             land_nft_object['count'] = 1;
             await landNFT.create(land_nft_object)
@@ -218,7 +221,8 @@ exports.addPlayerLand = async (req, res) => {
         //<-- Add Player Land ->
 
         //<-- Update User ->
-
+        delete land_nft_object['count'];
+        player_land_json['meta_data'] = land_nft_object;
 
         if (user_find) {
             await users.updateOne(
@@ -324,7 +328,7 @@ exports.getByUser = async (req, res) => {
                 });
         }
         let find = await users.findOne({ eth_address: eth_address }, { _id: 0 }).exec();
-        if(!find){
+        if (!find) {
             logger.warn(`NFT getByUser Get user eth_address : ${eth_address} not foud `);
             return res
                 .status(404)
