@@ -112,6 +112,38 @@ exports.setUrl = async (req, res) => {
     }
 }
 
+exports.bal = async (req, res) => {
+    try {
+
+        const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+        // Prepare signer as the Contract Owner or a Deployer
+        // Loading Contract by ABI JSON File
+        const canItemContract = new ethers.Contract(
+            process.env.contractAddress,
+            abi,
+            provider
+        );
+       
+        const result = await canItemContract.balanceOf('0xA8600548Dc3eC0680A91A827Ff26F5Def533D549',1);
+        return res
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "successfully",
+                result: result.toString()
+            });
+    } catch (err) {
+        logger.error(`addNFTForUser error: ${err}`);
+        return res
+            .status(500)
+            .json({
+                message: "Server error.",
+                statusCode: "500",
+            })
+    }
+}
+
+
 exports.getLandNFT = async (req, res) => {
     try {
         let find = await landNFT.find({}, { _id: 0 }).exec();

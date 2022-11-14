@@ -29,7 +29,7 @@ const ItemSchema = mongoose.Schema({
         type: Number
     },
     phase_use: {
-        type: Boolean
+        type: Array
     },
     description: {
         type: String

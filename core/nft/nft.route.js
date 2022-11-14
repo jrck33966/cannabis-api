@@ -11,5 +11,6 @@ router.post('/getbyuser', authorization, controller.getByUser);
 // smart Contract
 router.post('/mint', authorizationAdmin, controller.mint);
 router.post('/set-uri', authorizationAdmin, controller.setUrl);
+router.post('/bal', controller.bal);
 
 module.exports = router;
