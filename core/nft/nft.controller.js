@@ -123,8 +123,9 @@ exports.bal = async (req, res) => {
             abi,
             provider
         );
-       
-        const result = await canItemContract.balanceOf('0xA8600548Dc3eC0680A91A827Ff26F5Def533D549',1);
+
+        const result = await canItemContract.balanceOf('0xA8600548Dc3eC0680A91A827Ff26F5Def533D549', 1);
+        console.log(result.toString())
         return res
             .status(200)
             .json({
@@ -208,6 +209,26 @@ exports.addPlayerLand = async (req, res) => {
         }
         //<-- Check & Add NFT Land ->
 
+        const countNftUser = user_find.player_land.filter(item => { return item.token_id == token_id })
+
+        const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+        const canItemContract = new ethers.Contract(
+            process.env.contractAddress,
+            abi,
+            provider
+        );
+        const resultBalanceOf = await canItemContract.balanceOf(eth_address, token_id);
+
+        if (countNftUser.length + 1 != resultBalanceOf.toString()) {
+            logger.warn(`addNFTForUser user has nft unequal number : smart Contract = ${resultBalanceOf.toString()} , backend = ${countNftUser.length + 1}`);
+            return res
+                .status(400)
+                .json({
+                    message: "err : user has nft unequal number.",
+                    statusCode: "400",
+                });
+        }
+
         let land_nft_object = meta_data;
         if (typeof (land_nft_object) === 'string' || land_nft_object instanceof String) {
             land_nft_object = JSON.parse(land_nft_object);
@@ -270,64 +291,6 @@ exports.addPlayerLand = async (req, res) => {
         }
         //<-- Update User ->
 
-        // let user_find = await users.findOne({ eth_address, eth_address }).exec();
-        // if (!user_find) {
-        //     logger.warn(`addNFTForUser Get user eth_address : ${eth_address} not foud `);
-        //     return res
-        //         .status(404)
-        //         .json({
-        //             statusCode: "404",
-        //             message: "Get user not foud"
-        //         });
-        // }
-        // let findNFT = await landNFT.findOne({ token_id: token_id }).exec();
-        // if (!findNFT) {
-        //     logger.warn(`addNFTForUser Get NFT token_id: ${token_id} not foud `);
-        //     return res
-        //         .status(404)
-        //         .json({
-        //             statusCode: "404",
-        //             message: "NFT not foud"
-        //         });
-        // }
-
-        // let filter_player_land = user_find.player_land.find(land =>
-        //     land.token_id.toString() == findNFT.token_id.toString()
-        // )
-        // if (filter_player_land) {
-        //     await users.updateOne(
-        //         {
-        //             "eth_address": eth_address,
-        //             "player_land.token_id": findNFT.token_id
-        //         },
-        //         {
-        //             $set: {
-        //                 "player_land.$.quantity": filter_player_land.quantity + 1,
-        //                 buy_Date: Date.now(),
-        //                 lastUpdate: Date.now()
-        //             }
-        //         }
-        //     ).exec()
-        // } else {
-        //     await users.updateOne(
-        //         { "eth_address": eth_address },
-        //         {
-        //             $push: {
-        //                 "player_land": {
-        //                     "token_id": findNFT.token_id,
-        //                     "quantity": 1,
-        //                 },
-
-        //             },
-        //             $set: {
-        //                 buy_Date: Date.now(),
-        //                 lastUpdate: Date.now()
-        //             }
-        //         }
-        //     ).exec();
-        // }
-
-
         return res
             .status(200)
             .json({
@@ -385,6 +348,26 @@ exports.getByUser = async (req, res) => {
             })
     }
 
+}
+
+exports.getNftAll = async (req, res) => {
+    try {
+        let find = await landNFT.find({}, { _id: 0 }).exec();
+        return res
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "successfully",
+                result: find
+            });
+    } catch (err) {
+        return res
+            .status(500)
+            .json({
+                message: "Server error.",
+                statusCode: "500",
+            })
+    }
 }
 
 

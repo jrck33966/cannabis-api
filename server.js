@@ -26,7 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cookieParser());
 app.use('/api/v1', login)
 app.use('/api/v2/admin', admin)
-app.use('/api/v1/user', users)
+app.use('/api/v1/user', users)  
 app.use('/api/v1/item', items)
 app.use('/api/v1/planting', planting)
 app.use('/api/v1/image', image)
