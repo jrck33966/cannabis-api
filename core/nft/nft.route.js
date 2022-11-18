@@ -15,4 +15,6 @@ router.post('/mint', authorizationAdmin, controller.mint);
 router.post('/set-uri', authorizationAdmin, controller.setUrl);
 router.post('/bal', controller.bal);
 
+router.get('/get-id',authorization, controller.randomTokenId);
+
 module.exports = router;

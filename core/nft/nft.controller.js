@@ -370,6 +370,40 @@ exports.getNftAll = async (req, res) => {
     }
 }
 
+exports.randomTokenId = async (req, res) => {
+    try {
+        let randNumber = Math.random() * 100;
+        randNumber = randNumber.toFixed(2)
+        let rarity = '';
+        if (randNumber <= 0.03) {
+            rarity = "SR";
+        } else if (randNumber <= 0.5 && randNumber > 0.03) {
+            rarity = "S"
+        } else if (randNumber <= 10 && randNumber > 0.5) {
+            rarity = "A"
+        } else {
+            rarity = "B"
+        }
+        let find = await landNFT.find({ "attributes.rarity": rarity }).exec();
+        var randId = find[Math.floor(Math.random()*find.length)];
+        logger.info(`randomtokenId success get tokenId : ${randId.token_id} - ${rarity}`);
+        return res
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "successfully",
+                token_id: randId.token_id,
+            });
+    } catch (err) {
+        logger.error(`addNFTForUser error: ${err}`);
+        return res
+            .status(500)
+            .json({
+                message: "Server error.",
+                statusCode: "500",
+            })
+    }
+}
 
 const getNextSequence = async () => {
     var ret = await player_land.find({}).sort({ land_id: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(1)
