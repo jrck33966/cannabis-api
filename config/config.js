@@ -1,27 +1,19 @@
-const config = {
-    app: {
-      port: 3000
-    },
-    db: {
-      host: '192.168.1.46',
-      port: 27017,
-      username: 'cannabis',
-      password: 'cannabis2022',
-      name: 'cannabis',
-      prefix:'cannabis_'
-    },
-    pathImg :{
-      pathTmp :"../upload/tmp",
-      pathItem : "../../upload/img-items",
-    },
-    admin:{
-      username: "dev",
-      password: "dev"
-    },    
-    jwtSecret : "cain-api-dev",
-    jwtSecretAdmin : "cain-api-admin",
-    jwtRefreshSecretAdmin : "cain-api-refresh-admin",
-   };
-   
-   
-module.exports = config;
+const configDevelopment = require('./evn/development')
+const configProduction = require('./evn/production')
+
+function ConfigApp() {
+    switch (process.env.NODE_ENV) {
+        case 'development':
+            return configDevelopment;
+
+        case 'production':
+            return configProduction;
+
+        default:
+            return configDevelopment;
+    }
+
+}
+
+module.exports = new ConfigApp();
+

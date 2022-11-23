@@ -3,10 +3,12 @@ const abi = require("../../config/abi.json");
 require("dotenv").config();
 
 var logger = require('../../config/configLog')
+const config = require('../../config/config')
 const landNFT = require('../../model/landNFT.model')
 const player_land = require('../../model/playerLand.model')
 const users = require('../../model/users.model')
 
+var crypto = require("crypto");
 exports.mint = async (req, res) => {
     try {
         const { tokenId, amount } = req.body;
@@ -116,6 +118,8 @@ exports.bal = async (req, res) => {
     try {
 
         const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+        const ownerWallet = new ethers.Wallet(process.env.privateKey, provider);
+        console.log(ownerWallet.address)
         // Prepare signer as the Contract Owner or a Deployer
         // Loading Contract by ABI JSON File
         const canItemContract = new ethers.Contract(
@@ -124,8 +128,7 @@ exports.bal = async (req, res) => {
             provider
         );
 
-        const result = await canItemContract.balanceOf('0xA8600548Dc3eC0680A91A827Ff26F5Def533D549', 1);
-        console.log(result.toString())
+        const result = await canItemContract.balanceOf(ownerWallet.address, 1);
         return res
             .status(200)
             .json({
@@ -372,30 +375,79 @@ exports.getNftAll = async (req, res) => {
 
 exports.randomTokenId = async (req, res) => {
     try {
-        let randNumber = Math.random() * 100;
-        randNumber = randNumber.toFixed(2)
+        let chkBalanceOf = true;
         let rarity = '';
-        if (randNumber <= 0.03) {
-            rarity = "SR";
-        } else if (randNumber <= 0.5 && randNumber > 0.03) {
-            rarity = "S"
-        } else if (randNumber <= 10 && randNumber > 0.5) {
-            rarity = "A"
-        } else {
-            rarity = "B"
+        let randId = '';
+        while (chkBalanceOf) {
+            let randNumber = Math.random() * 100;
+            randNumber = randNumber.toFixed(2)
+
+            if (randNumber <= 0.03) {
+                rarity = "SR";
+            } else if (randNumber <= 0.5 && randNumber > 0.03) {
+                rarity = "S"
+            } else if (randNumber <= 10 && randNumber > 0.5) {
+                rarity = "A"
+            } else {
+                rarity = "B"
+            }
+            let find = await landNFT.find({ "attributes.rarity": rarity }).exec();
+            randId = find[Math.floor(Math.random() * find.length)];
+            // check balanceOf
+            const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+            const ownerWallet = new ethers.Wallet(process.env.privateKey, provider);
+            const canItemContract = new ethers.Contract(
+                process.env.contractAddress,
+                abi,
+                provider
+            );
+            const result = await canItemContract.balanceOf(ownerWallet.address, randId.token_id);
+            if (result.toString() > 0) {
+                chkBalanceOf = false;
+            }
+            // check balanceOf
         }
-        let find = await landNFT.find({ "attributes.rarity": rarity }).exec();
-        var randId = find[Math.floor(Math.random()*find.length)];
+        let encryptID = encrypt(randId.token_id);
         logger.info(`randomtokenId success get tokenId : ${randId.token_id} - ${rarity}`);
+        // let randNumber = Math.random() * 100;
+        // randNumber = randNumber.toFixed(2)
+        // let rarity = '';
+        // if (randNumber <= 0.03) {
+        //     rarity = "SR";
+        // } else if (randNumber <= 0.5 && randNumber > 0.03) {
+        //     rarity = "S"
+        // } else if (randNumber <= 10 && randNumber > 0.5) {
+        //     rarity = "A"
+        // } else {
+        //     rarity = "B"
+        // }
+        // let find = await landNFT.find({ "attributes.rarity": rarity }).exec();
+        // let randId = find[Math.floor(Math.random() * find.length)];
+        // // check balanceOf
+        // const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+        // const ownerWallet = new ethers.Wallet(process.env.privateKey, provider);
+        // const canItemContract = new ethers.Contract(
+        //     process.env.contractAddress,
+        //     abi,
+        //     provider
+        // );
+        // const result = await canItemContract.balanceOf(ownerWallet.address, 1);
+
+        // if(result.toString() > 0){
+        // }
+        // check balanceOf
+
+        // let encryptID = encrypt(randId.token_id);
+        // logger.info(`randomtokenId success get tokenId : ${randId.token_id} - ${rarity}`);
         return res
             .status(200)
             .json({
                 statusCode: "200",
                 message: "successfully",
-                token_id: randId.token_id,
+                token_id: encryptID,
             });
     } catch (err) {
-        logger.error(`addNFTForUser error: ${err}`);
+        logger.error(`randomTokenId error: ${err}`);
         return res
             .status(500)
             .json({
@@ -404,6 +456,30 @@ exports.randomTokenId = async (req, res) => {
             })
     }
 }
+
+let algorithm = "aes-192-cbc";
+let secret = config.secretHash;
+const key = crypto.scryptSync(secret, 'salt', 24);
+
+//Encrypting text
+function encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    let cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { iv: iv.toString('hex'), data: encrypted.toString('hex') };
+}
+
+// Decrypting text
+function decrypt(text) {
+    let iv = Buffer.from(text.iv, 'hex');
+    let encryptedText = Buffer.from(text.data, 'hex');
+    let decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+}
+
 
 const getNextSequence = async () => {
     var ret = await player_land.find({}).sort({ land_id: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(1)
