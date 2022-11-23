@@ -381,7 +381,6 @@ exports.randomTokenId = async (req, res) => {
         while (chkBalanceOf) {
             let randNumber = Math.random() * 100;
             randNumber = randNumber.toFixed(2)
-
             if (randNumber <= 0.03) {
                 rarity = "SR";
             } else if (randNumber <= 0.5 && randNumber > 0.03) {
@@ -409,36 +408,6 @@ exports.randomTokenId = async (req, res) => {
         }
         let encryptID = encrypt(randId.token_id);
         logger.info(`randomtokenId success get tokenId : ${randId.token_id} - ${rarity}`);
-        // let randNumber = Math.random() * 100;
-        // randNumber = randNumber.toFixed(2)
-        // let rarity = '';
-        // if (randNumber <= 0.03) {
-        //     rarity = "SR";
-        // } else if (randNumber <= 0.5 && randNumber > 0.03) {
-        //     rarity = "S"
-        // } else if (randNumber <= 10 && randNumber > 0.5) {
-        //     rarity = "A"
-        // } else {
-        //     rarity = "B"
-        // }
-        // let find = await landNFT.find({ "attributes.rarity": rarity }).exec();
-        // let randId = find[Math.floor(Math.random() * find.length)];
-        // // check balanceOf
-        // const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
-        // const ownerWallet = new ethers.Wallet(process.env.privateKey, provider);
-        // const canItemContract = new ethers.Contract(
-        //     process.env.contractAddress,
-        //     abi,
-        //     provider
-        // );
-        // const result = await canItemContract.balanceOf(ownerWallet.address, 1);
-
-        // if(result.toString() > 0){
-        // }
-        // check balanceOf
-
-        // let encryptID = encrypt(randId.token_id);
-        // logger.info(`randomtokenId success get tokenId : ${randId.token_id} - ${rarity}`);
         return res
             .status(200)
             .json({
