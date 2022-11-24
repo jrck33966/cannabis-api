@@ -1,5 +1,5 @@
-const configDevelopment = require('./evn/development')
-const configProduction = require('./evn/production')
+const configDevelopment = require('./env/development')
+const configProduction = require('./env/production')
 
 function ConfigApp() {
     switch (process.env.NODE_ENV) {

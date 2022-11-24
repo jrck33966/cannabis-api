@@ -1,14 +1,16 @@
-var planting = require('../../model/planting.model');
-var users = require('../../model/users.model');
-var items = require('../../model/items.model')
 var ObjectId = require('mongoose').Types.ObjectId;
 var moment = require('moment');
 var logger = require('../../config/configLog')
 var _ = require('underscore');
 
+var planting = require('../../model/planting.model');
+var users = require('../../model/users.model');
+var items = require('../../model/items.model')
+var landStat = require('../../model/land_stat.model')
+
 exports.startPlanting = async (req, res) => {
     try {
-        let { eth_address, item_list } = req.body;
+        let { eth_address, land_id, item_list } = req.body;
         //cut the number of item user
         let user_find = await users.findOne({ eth_address, eth_address }).exec();
         if (!user_find) {
@@ -17,20 +19,46 @@ exports.startPlanting = async (req, res) => {
                 .status(404)
                 .json({
                     statusCode: "404",
-                    message: "Get user not foud",
-                    result: []
+                    message: "Get user not foud"
                 });
         }
-        if(user_find['item'].length <= 0) {
+        if (!land_id) {
+            logger.warn(`getPlanting user eth_address : ${eth_address} land_id:${land_id} is null`);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: "err : ValidationError: land_id: Path `land_id` is required.",
+                });
+        }
+        if (user_find['item'].length <= 0) {
             logger.warn(`getPlanting user eth_address : ${eth_address} has no item.`);
             return res
-            .status(400)
-            .json({
-                statusCode: "400",
-                message: `ERROR : user eth_address : ${eth_address} has no item.`,
-            });
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `ERROR : user eth_address : ${eth_address} has no item.`,
+                });
         }
+        let user_player_land = user_find['player_land'].find(it => it.land_id == land_id);
+        if(!user_player_land){
+            logger.warn(`getPlanting user eth_address : ${eth_address} has no land item.`);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `ERROR : user eth_address : ${eth_address} has no land item.`,
+                });
+        }
+        let rarity = user_player_land.meta_data.attributes.rarity;
+        let format = user_player_land.meta_data.attributes.format;
 
+        
+
+
+
+
+        
         let flag_seed = false;
         let flag_error = false;
         let msg_error = [];
@@ -286,8 +314,8 @@ exports.getPlanting = async (req, res) => {
                         checkDate = true;
                     }
                 } while (!checkDate)
-
-                delete item._doc._id
+                item['_doc']['timeserver'] = moment(Date.now()).format('YYYYMMDDHHmmssZZ')
+                delete item._doc._id;
                 arr_send.push(item)
             }
             logger.info(`getPlanting by eth_address: ${eth_address}`)
