@@ -5,7 +5,8 @@ var authorization = require("../../middleware/auth");
 
 router.post('/start', authorization, controller.startPlanting);
 router.post('/get', authorization, controller.getPlanting);
-router.post('/get/test', authorization, controller.getPlantingCheckDate);
+router.post('/get/test', authorization, controller.testPlanting);
+router.post('/get/test-by-date', authorization, controller.testPlantingByDate);
 
 
 module.exports = router;
