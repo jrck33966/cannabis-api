@@ -1,3 +1,6 @@
+const https = require('https'); 
+var http = require('http');
+var fs = require('fs'); 
 const express = require('express')
 const cookieParser = require("cookie-parser");
 const app = express()
@@ -16,7 +19,7 @@ var nft = require("./core/nft/nft.route")
 
 var connect = require("./connectDb/connect")
 var config = require("./config/config")
-var logger = require('./config/configLog')
+var logger = require('./config/configLog');
 
 
 app.use(cors({origin:true,credentials: true}));
@@ -39,12 +42,41 @@ app.use(function (req, res, next) {
     res.status(500).send("Internal Server error")
 })
 
-app.listen(config.app.port, async () => {
+// app.listen(config.app.port, async () => {
+//     let con = await connect();
+//     if (con) {
+//         console.log(`Start server at port ${config.app.port}.`)
+//         logger.info(`Start server at port ${config.app.port}.`);
+//     } else {
+//         process.exit()
+//     }
+// })
+
+var options = { 
+    key: fs.readFileSync('./ssl/server-key.pem'), 
+    cert: fs.readFileSync('./ssl/server-crt.pem'), 
+    ca: fs.readFileSync('./ssl/ca-crt.pem'), 
+}; 
+
+var serverHttp = http.createServer( app );
+var serverHttps = https.createServer( options , app );
+
+serverHttp.listen( 3000,async function () {
     let con = await connect();
     if (con) {
-        console.log(`Start server at port ${config.app.port}.`)
-        logger.info(`Start server at port ${config.app.port}.`);
+        console.log(`Start server Http at port ${config.app.port}.`)
+        logger.info(`Start server Http at port ${config.app.port}.`);
     } else {
         process.exit()
     }
-})
+});
+
+serverHttps.listen( 3001,async function () {
+    let con = await connect();
+    if (con) {
+        console.log(`Start server Https at port ${config.app.port}.`)
+        logger.info(`Start server Https at port ${config.app.port}.`);
+    } else {
+        process.exit()
+    }
+});

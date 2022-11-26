@@ -3,9 +3,22 @@ var config = require('../config/config');
 
 
 const plantingSchema = mongoose.Schema({
+    id: {
+        type: String,
+        required: true
+    },
     eth_address: {
         type: String,
         required: true
+    },
+    seed_id: {
+        type: String,
+    },
+    land_id: {
+        type: String,
+    },
+    special_id: {
+        type: String,
     },
     item: {
         type: Array
@@ -46,22 +59,30 @@ const plantingSchema = mongoose.Schema({
     start_planting_date: {
         type: Date
     },
-    harvest_date:{
+    harvest_date: {
         type: Date
     },
-    fail_date:{
+    fail_date: {
         type: Date
-    },
-    // - is_planting type
-    // - planting = กำลังโต 
-    // - failed = ตาย
-    // - harvested = เก็บเกี่ยวแล้ว
-    is_planting: {
-        type:  String
     },
     is_active: {
         type: Boolean
-    }
+    },
+    base_sell_price: {
+        type: Number
+    },
+    cost: {
+        type: Number
+    },
+    // - planting_state type
+    // - planting = กำลังโต 
+    // - die = ตาย
+    // - harvested = เก็บเกี่ยวแล้ว
+    // - male 
+    // - female
+    planting_state: {
+        type: String
+    },
 }, { versionKey: false });
 
 module.exports = mongoose.model('planting', plantingSchema, config.db.prefix + 'planting'); 

@@ -7,6 +7,7 @@ const config = require('../../config/config')
 const landNFT = require('../../model/landNFT.model')
 const player_land = require('../../model/playerLand.model')
 const users = require('../../model/users.model')
+const land_stat = require('../../model/land_stat.model')
 
 var crypto = require("crypto");
 exports.mint = async (req, res) => {
@@ -116,7 +117,7 @@ exports.setUrl = async (req, res) => {
 
 exports.bal = async (req, res) => {
     try {
-
+        const { eth_address, token_id } = req.body
         const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
         const ownerWallet = new ethers.Wallet(process.env.privateKey, provider);
         console.log(ownerWallet.address)
@@ -128,7 +129,7 @@ exports.bal = async (req, res) => {
             provider
         );
 
-        const result = await canItemContract.balanceOf(ownerWallet.address, 1);
+        const result = await canItemContract.balanceOf(eth_address, token_id);
         return res
             .status(200)
             .json({
@@ -335,6 +336,23 @@ exports.getByUser = async (req, res) => {
                     message: "Get user not foud"
                 });
         }
+
+        for(let item of find.player_land){         
+            let rarity = item.meta_data.attributes.rarity;
+            let rarityUpper = new RegExp(["^", rarity, "$"].join(""), "i");
+            let format = item.meta_data.attributes.format;
+            let formatUpper = new RegExp(["^", format, "$"].join(""), "i");
+            let find_land_stat = await land_stat.findOne({
+                rarity: rarityUpper,
+                format: formatUpper
+            })
+            if (find_land_stat) {
+                item['survive_rate_bonus'] = find_land_stat.survive_rate_bonus
+                item['grow_date_bonus'] = find_land_stat.grow_date_bonus
+                item['quality_bonus'] = find_land_stat.quality_bonus
+            }
+        }
+
         return res
             .status(200)
             .json({
