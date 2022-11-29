@@ -1,7 +1,7 @@
 const ethers = require("ethers");
 const abi = require("../../config/abi.json");
 require("dotenv").config();
-
+const request = require('request');
 var logger = require('../../config/configLog')
 const config = require('../../config/config')
 const landNFT = require('../../model/landNFT.model')
@@ -10,6 +10,7 @@ const users = require('../../model/users.model')
 const land_stat = require('../../model/land_stat.model')
 
 var crypto = require("crypto");
+const { result } = require("underscore");
 exports.mint = async (req, res) => {
     try {
         const { tokenId, amount } = req.body;
@@ -314,6 +315,120 @@ exports.addPlayerLand = async (req, res) => {
 
 }
 
+exports.addPlayerLandV2 = async (req, res) => {
+    try {
+        const { eth_address } = req.body;
+        const provider = new ethers.providers.JsonRpcProvider(process.env.rpcUrl);
+        const canItemContract = new ethers.Contract(
+            process.env.contractAddress,
+            abi,
+            provider
+        );
+
+        // let arr = []
+        let arrEth_Address = []
+        let arr_id = []
+        for (let i = 0; i < 300; i++) {
+            arrEth_Address.push(eth_address);
+            arr_id.push(i + 1);
+        }
+
+        const result = await canItemContract.balanceOfBatch(arrEth_Address, arr_id);
+        let split = result.toString().split(",")
+
+        let arr = []
+        for (let i = 0; i < split.length; i++) {
+            let ob = {
+                token_id: (i + 1).toString(),
+                count: split[i]
+            }
+            arr.push(ob);
+        }
+
+        let user_find = await users.findOne({ eth_address, eth_address }).exec();
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i].count != '0') {
+                let token_id = arr[i].token_id;
+                let count = parseInt(arr[i].count);
+                let count_user = user_find.player_land.filter(val => {
+                    return val.token_id == token_id
+                })
+                if (count_user.length < count) {
+                    let diff = count - count_user.length;
+                    for (let j = 0; j < diff; j++) {
+                        let data = await Request(`https://bafybeihvdqgamy7u3r2dcgz4qkbdtbocme65ascpnx3wbv637xpwsuic3u.ipfs.nftstorage.link/${token_id}.json`)
+
+                        //<-- Add count nft ->
+                        let find_nft = await landNFT.findOne({ token_id: token_id }).exec();
+                        if (find_nft) {
+                            await landNFT.updateOne(
+                                {
+                                    "token_id": token_id
+                                },
+                                {
+                                    $set: {
+                                        "count": find_nft.count + 1
+                                    }
+                                }
+                            ).exec()
+                        } else {
+
+                            land_nft_object['token_id'] = token_id;
+                            land_nft_object['count'] = 1;
+                            await landNFT.create(land_nft_object)
+                        }
+                        //<-- Add count nft ->
+
+                        //<-- Add Player Land ->
+                        var player_land_json = {
+                            land_id: await getNextSequence(),
+                            token_id: token_id.toString(),
+                            status: "idle",
+                            is_rent: null,
+                            start_rent_date: null,
+                            end_rent_date: null,
+                            rent_price_rate: null
+
+                        }
+
+                        await player_land.create(player_land_json)
+                        //<-- Add Player Land ->
+
+                        //<-- Update User ->
+                        player_land_json['meta_data'] = data;
+                        await users.updateOne(
+                            {
+                                "eth_address": eth_address,
+                            },
+                            {
+                                $push: {
+                                    player_land: player_land_json
+                                }
+                            }
+                        ).exec()
+                        //<-- Update User ->
+                        logger.info(`NFT addPlayerLand user eth_address : ${eth_address} -- add token_id: ${token_id} `);
+                    }
+                }
+            }
+        }
+        return res
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "successfully"
+            });
+    } catch (err) {
+        logger.error(`NFT addPlayerLand user eth_address : ${eth_address} -- error: ${err} `);
+        return res
+            .status(500)
+            .json({
+                message: "Server error.",
+                statusCode: "500",
+            })
+    }
+}
+
 exports.getByUser = async (req, res) => {
     try {
         const { eth_address } = req.body;
@@ -337,7 +452,7 @@ exports.getByUser = async (req, res) => {
                 });
         }
 
-        for(let item of find.player_land){         
+        for (let item of find.player_land) {
             let rarity = item.meta_data.attributes.rarity;
             let rarityUpper = new RegExp(["^", rarity, "$"].join(""), "i");
             let format = item.meta_data.attributes.format;
@@ -443,6 +558,24 @@ exports.randomTokenId = async (req, res) => {
             })
     }
 }
+
+
+
+const Request = function (options) {
+    return new Promise((resolve, reject) => {
+        request(options, (error, response, body) => {
+            if (response) {
+                if (response.statusCode = 200) {
+                    return resolve(JSON.parse(body));
+                }
+            }
+            if (error) {
+                return reject(error);
+            }
+        });
+    });
+};
+
 
 let algorithm = "aes-192-cbc";
 let secret = config.secretHash;
