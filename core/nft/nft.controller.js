@@ -372,7 +372,7 @@ exports.addPlayerLandV2 = async (req, res) => {
                                 }
                             ).exec()
                         } else {
-
+                            land_nft_object = data;
                             land_nft_object['token_id'] = token_id;
                             land_nft_object['count'] = 1;
                             await landNFT.create(land_nft_object)

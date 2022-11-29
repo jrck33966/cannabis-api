@@ -17,6 +17,5 @@ router.post('/bal', controller.bal);
 
 router.get('/get-id',authorization, controller.randomTokenId);
 
-router.post('/test', controller.testAdd);
 
 module.exports = router;
