@@ -98,7 +98,20 @@ exports.startPlanting = async (req, res) => {
                 })
             }
             // ลบ seed ออก เนื่องจากมีการใช้ seed นั้น
-            user_find['item'].map(it => {
+            // user_find['item'].map(it => {
+            //     if (it.id.toString() == find_item_seed._id.toString()) {
+            //         if (it.quantity >= 1) {
+            //             it.quantity = it.quantity - 1;
+            //         } else {
+            //             flag_error = true;
+            //             msg_error.push({
+            //                 type: find_item_seed.type,
+            //                 name: find_item_seed.name
+            //             })
+            //         }
+            //     }
+            // })
+            for (let it of user_find['item']) {
                 if (it.id.toString() == find_item_seed._id.toString()) {
                     if (it.quantity >= 1) {
                         it.quantity = it.quantity - 1;
@@ -110,7 +123,7 @@ exports.startPlanting = async (req, res) => {
                         })
                     }
                 }
-            })
+            }
         }
 
         /// check item user
@@ -218,12 +231,38 @@ exports.startPlanting = async (req, res) => {
         plantingModel.is_active = true;
         plantingModel.cost = await PlantingFormulaCost(seed_id, special_id, item_list);
         plantingModel.base_sell_price = await PlantingFormulaBase_sell_price(seed_id);
-        await planting.create(plantingModel);
+        planting.create(plantingModel);
+
+
+        await users.updateOne(
+            {
+                eth_address: eth_address,
+                item: { $elemMatch: { id: find_item_seed._id } }
+            },
+            {
+                $inc: { "item.$.quantity": -1 }
+            }
+        )
+
+        for (let item of item_list) {
+            for (let itemId of item['items']) {
+                let find_item = await items.findOne({ "id": itemId }).exec();
+                await users.updateOne(
+                    {
+                        eth_address: eth_address,
+                        item: { $elemMatch: { id: find_item._id } }
+                    },
+                    {
+                        $inc: { "item.$.quantity": -1 }
+                    }
+                )
+            }
+        }
+
         await users.updateOne(
             { eth_address: eth_address },
             {
                 $set: {
-                    'item': user_find['item'],
                     'player_land': user_find['player_land']
                 }
             }

@@ -602,7 +602,7 @@ exports.buyItem = async (req, res) => {
                 newIncome.itemId = id;
                 newIncome.quantity = quantity;
                 newIncome.total_price = parseInt(itemFind.price) * parseInt(quantity);
-                let date = moment(moment(Date.now()).format('YYYYMMDDHHmmssZZ'), "YYYYMMDDHHmmssZZ")
+                let date = moment(moment(Date.now()).utc(0).format('YYYYMMDDHHmmssZZ'), "YYYYMMDDHHmmssZZ")
                 newIncome.buy_date = date;
 
                 await income.create(newIncome);
