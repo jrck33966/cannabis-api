@@ -267,7 +267,7 @@ exports.startPlanting = async (req, res) => {
                 }
             }
         )
-        logger.info(`startPlanting success by eth_address: ${eth_address}`)
+        logger.info(`startPlanting success by eth_address: ${eth_address} -- Detail : ${plantingModel}`)
         return res
             .status(200)
             .json({
