@@ -9,11 +9,11 @@ var upload = require('../../middleware/multer')
 router.post('/', [
     authorizationAdmin,
     upload.single('img'),
-    controller.addItem
+    controller.addItemV2
 ]);
 
 router.get("/", [
-    authorization, controller.getItem
+    authorization, controller.getItemV2
 ]);
 
 router.post("/getbyuser", [
@@ -23,7 +23,7 @@ router.post("/getbyuser", [
 router.put("/", [
     authorizationAdmin,
     upload.single('img'),
-    controller.editItem
+    controller.editItemV2
 ]);
 
 router.delete("/:id", [

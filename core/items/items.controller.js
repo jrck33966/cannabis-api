@@ -122,6 +122,49 @@ exports.addItem = async (req, res) => {
     }
 }
 
+exports.addItemV2 = async (req, res) => {
+    try {
+        const { image, type, name, rarity,
+            price, use_type, quantity_user, phase_use,
+            description, attribute } = req.body;
+        var itemModel = new items();
+        itemModel.id = await getNextSequence();
+        itemModel.image = image == undefined ? null : image;
+        itemModel.type = type == undefined ? null : type;
+        itemModel.name = name == undefined ? null : name;
+        itemModel.rarity = rarity == undefined ? null : rarity;
+        itemModel.price = price == undefined ? null : price;
+        itemModel.use_type = use_type == undefined ? null : use_type;
+        itemModel.quantity_user = quantity_user == undefined ? null : quantity_user;
+        itemModel.phase_use = phase_use == undefined ? [] : phase_use;
+        itemModel.description = description == undefined ? null : description;
+        let _ob;
+        if (typeof (attribute) === 'string' || attribute instanceof String) {
+            _ob = JSON.parse(attribute);
+        } else {
+            _ob = attribute;
+        }
+        itemModel.attribute = _ob;
+        await itemModel.save();
+        logger.info(`addItem success by username: ${req.id}`)
+        return res
+            .status(200)
+            .json({
+                statusCode: "200",
+                message: "Add item successfully 😊 👌"
+            });
+    }
+    catch (err) {
+        logger.error(`addItem error: ${err}`);
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
+}
+
 const getNextSequence = async () => {
     var ret = await items.find({}).sort({ id: -1 }).collation({ locale: "en_US", numericOrdering: true }).limit(1)
     return (parseInt(ret[0].id) + 1).toString();
@@ -196,6 +239,69 @@ exports.editItem = async (req, res) => {
                 { upsert: 1 }
             ).exec();
             logger.info(`editItem success by username: ${req.id}`)
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "Edit item successfully 😊 👌"
+                });
+        } else {
+            return res
+                .status(404)
+                .json({
+                    statusCode: "404",
+                    message: "Get item Not Foud",
+                    result: null
+                });
+        }
+    }
+    catch (err) {
+        logger.error(`addItem error: ${err}`);
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
+}
+
+exports.editItemV2 = async (req, res) => {
+    try {
+        const { id } = req.body;
+        let dateUpdate = req.body;
+        if (id == undefined || id == "") {
+            return res
+                .status(400)
+                .json({
+                    message: "err : ValidationError: id: Path `id` is required.",
+                    statusCode: "400",
+                });
+        }
+        if (typeof dateUpdate != 'object') {
+            dateUpdate = JSON.parse(dateUpdate);
+        }
+        let find = await items.findOne({ id: id }).exec();
+        if (find) {
+            if (dateUpdate['attribute']) {
+                let _ob;
+                if (typeof (dateUpdate['attribute']) === 'string' || dateUpdate['attribute'] instanceof String) {
+                    console.log("here")
+                    _ob = JSON.parse(dateUpdate['attribute'])
+                } else {
+                    _ob = attribute;
+                }
+                dateUpdate['attribute'] = _ob;
+            }
+            delete dateUpdate.id;
+            items.updateOne(
+                { "_id": ObjectId(find._id) },
+                {
+                    $set: dateUpdate
+                },
+                { upsert: 1 }
+            ).exec();
+            logger.info(`editItem itemId : ${id} success by username: ${req.id}`)
             return res
                 .status(200)
                 .json({
@@ -326,6 +432,68 @@ exports.getItem = async (req, res) => {
                 }
 
             })
+            logger.info(`getItem success by username: ${req.userId}`)
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "Get item successfully 😊 👌",
+                    result: find,
+                });
+        } else {
+            logger.warn(`getItem Get item not foud `);
+            return res
+                .status(404)
+                .json({
+                    statusCode: "404",
+                    message: "Get item not foud",
+                    result: []
+                });
+        }
+    }
+    catch (err) {
+        logger.error(`getItem error: ${err}`);
+        return res
+            .status(400)
+            .json({
+                statusCode: "400",
+                message: `err : ${err}`
+            });
+    }
+}
+
+exports.getItemV2 = async (req, res) => {
+    try {
+        const query = req.query;
+        let type = query.type
+        let typeUpper = new RegExp(["^", type, "$"].join(""), "i");
+        let id = query.id;
+        let find;
+        if ((type == undefined || type == '') && (id == undefined || id == '')) {
+            find = await items.find({}, { _id: 0 }).exec();
+        } else if ((type != undefined && type != '') && (id != undefined && id != '')) {
+            find = await items.aggregate([
+                {
+                    $match: {
+                        $and:
+                            [
+                                { id: id },
+                                { type: typeUpper }
+                            ]
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0
+                    }
+                }
+            ]).exec();
+        } else if (type != undefined && type != '') {
+            find = await items.find({ type: typeUpper }, { _id: 0 }).exec();
+        } else if (id != undefined && id != '') {
+            find = await items.find({ id: id }, { _id: 0 }).exec();
+        }
+        if (find && find.length > 0) {
             logger.info(`getItem success by username: ${req.userId}`)
             return res
                 .status(200)
