@@ -439,6 +439,7 @@ exports.getPlanting = async (req, res) => {
                                     }
                                     checkDate = true;
                                 }
+                                checkDate = true;
                             } else {
                                 checkDate = true;
                                 console.log("ยังไม่ถึงเวลา")
@@ -765,11 +766,11 @@ exports.testPlantingByDate = async (req, res) => {
             for (let item of find) {
                 let checkDate = false;
                 do {
-                    if (item.is_planting == 'planting') {
+                    if (item.planting_state == 'planting') {
                         let next = item.next_phase_datetime;
                         let cur_phase = item.phase;
                         if (cur_phase != 4) {
-                            if (moment(date).format('YYYYMMDDHHmmssZZ') > moment(next).format('YYYYMMDDHHmmssZZ')) {
+                            if (moment(date, 'YYYYMMDDHHmmssZZ').format('YYYYMMDDHHmmssZZ') > moment(next).format('YYYYMMDDHHmmssZZ')) {
                                 let nextPhase;
                                 let alive;
                                 let nextDate;
@@ -822,21 +823,21 @@ exports.testPlantingByDate = async (req, res) => {
                                     item['next_phase_datetime'] = newDateObj
                                 } else {
                                     console.log("ตาย")
-                                    let is_planting = 'failed';
+                                    let is_planting = 'die';
                                     await planting.updateOne(
                                         {
                                             "_id": ObjectId(item._id)
                                         },
                                         {
                                             $set: {
-                                                is_planting: is_planting,
+                                                planting_state: is_planting,
                                                 fail_date: Date.now()
                                             }
                                         }
                                     ).exec();
 
                                     //update date after calculate
-                                    item['is_planting'] = is_planting;
+                                    item['planting_state'] = is_planting;
                                     let find_user = await users.findOne({ eth_address: eth_address }).exec();
                                     let arritem_user = find_user.item;
 
@@ -856,7 +857,7 @@ exports.testPlantingByDate = async (req, res) => {
                                         default:
                                             break;
                                     }
-                                    //update return item to user
+                                    //update return item and change status playerland(idle) to user
                                     let flag_seed = false;
                                     if (cur_phase == 1 || cur_phase == 2) {
                                         for (let arrItems of find_item_planing) {
@@ -887,9 +888,29 @@ exports.testPlantingByDate = async (req, res) => {
                                                 }
                                             }
                                         )
+                                        let find_user = await users.findOne({ eth_address, eth_address }).exec();
+                                        if (find_user) {
+                                            find_user['player_land'].map(async it => {
+                                                if (it.land_id == it.land_id) {
+                                                    it.status = 'idle'
+                                                    let find_land_player = await playerLand.findOne({ land_id: it.land_id }).exec();
+                                                    if (find_land_player) {
+                                                        await playerLand.updateOne(
+                                                            { land_id: it.land_id },
+                                                            {
+                                                                $set: {
+                                                                    status: 'idle'
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            })
+                                        }
                                     }
                                     checkDate = true;
                                 }
+                                checkDate = true;
                             } else {
                                 checkDate = true;
                                 console.log("ยังไม่ถึงเวลา")
