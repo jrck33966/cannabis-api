@@ -337,6 +337,9 @@ exports.getPlanting = async (req, res) => {
                                         objectUpdate['next_phase_datetime'] = newDateObj
                                     } else if (nextPhase == 4) {
                                         objectUpdate['phase'] = nextPhase;
+                                        let maleOrFemale = generateRandomForPercent(item.female_chance);
+                                        console.log('maleOrFemale', maleOrFemale)
+                                        // objectUpdate['planting_state'] 
                                     }
                                     await planting.updateOne(
                                         {
@@ -453,6 +456,7 @@ exports.getPlanting = async (req, res) => {
                 } while (!checkDate)
                 item['_doc']['timeserver'] = moment(Date.now()).format('YYYYMMDDHHmmssZZ')
                 delete item._doc._id;
+                item._doc.id = await encrypt(item._doc.id)
                 arr_send.push(item)
             }
             logger.info(`getPlanting by eth_address: ${eth_address}`)
@@ -808,6 +812,13 @@ exports.testPlantingByDate = async (req, res) => {
                                         objectUpdate['next_phase_datetime'] = newDateObj
                                     } else if (nextPhase == 4) {
                                         objectUpdate['phase'] = nextPhase;
+                                        let maleOrFemale = generateRandomForPercent(item.female_chance);
+                                        if (maleOrFemale) {
+                                            objectUpdate['planting_state'] = 'female';
+                                        } else {
+                                            objectUpdate['male'] = 'female';
+                                        }
+
                                     }
                                     await planting.updateOne(
                                         {
@@ -924,6 +935,7 @@ exports.testPlantingByDate = async (req, res) => {
                 } while (!checkDate)
                 item['_doc']['timeserver'] = moment(Date.now()).format('YYYYMMDDHHmmssZZ')
                 delete item._doc._id;
+                item._doc.id = await encrypt(item._doc.id)
                 arr_send.push(item)
             }
             logger.info(`getPlanting by eth_address: ${eth_address}`)
@@ -979,23 +991,32 @@ exports.disCard = async (req, res) => {
                 });
         }
 
-        await planting.updateOne(
-            { eth_address: eth_address, id: id },
-            {
-                $set: {
-                    is_active: false
+        let find_planing = await planting.findOne({ id: id, eth_address: eth_address }).exec();
+        if (find_planing) {
+            await planting.updateOne(
+                { "_id": ObjectId(find_planing._id) },
+                {
+                    $set: {
+                        is_active: false
+                    }
                 }
-            }
-        )
-        logger.info(`Planting Discard user eth_address : ${eth_address} , planting_id : ${id} `);
-        return res
-            .status(200)
-            .json({
-                statusCode: "200",
-                message: "successfully"
-            });
-
-
+            )
+            logger.info(`Planting Discard user eth_address : ${eth_address} , planting_id : ${id} successfully`);
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "successfully"
+                });
+        } else {
+            logger.warn(`Planting Discard user eth_address : ${eth_address} , Planting  Not Found. `);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `Planting Not Found.`,
+                });
+        }
     }
     catch (err) {
         logger.error(`Planting Discard error: ${err}`);
@@ -1030,24 +1051,33 @@ exports.harvest = async (req, res) => {
                 });
         }
 
-        await planting.updateOne(
-            { eth_address: eth_address, id: id },
-            {
-                $set: {
-                    is_active: false,
-                    planting_state: 'harvested'
+        let find_planing = await planting.findOne({ id: id, eth_address: eth_address }).exec();
+        if (find_planing) {
+            await planting.updateOne(
+                { "_id": ObjectId(find_planing._id) },
+                {
+                    $set: {
+                        is_active: false,
+                        planting_state: 'harvested'
+                    }
                 }
-            }
-        )
-        logger.info(`Planting Harvest user eth_address : ${eth_address} , planting_id : ${id} `);
-        return res
-            .status(200)
-            .json({
-                statusCode: "200",
-                message: "successfully"
-            });
-
-
+            )
+            logger.info(`Planting Harvest user eth_address : ${eth_address} , planting_id : ${id} successfully`);
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "successfully"
+                });
+        } else {
+            logger.warn(`Planting Harvest user eth_address : ${eth_address} , Planting  Not Found. `);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `Planting Not Found.`,
+                });
+        }
     }
     catch (err) {
         logger.error(`Planting Harvest error: ${err}`);
