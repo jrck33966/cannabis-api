@@ -338,8 +338,11 @@ exports.getPlanting = async (req, res) => {
                                     } else if (nextPhase == 4) {
                                         objectUpdate['phase'] = nextPhase;
                                         let maleOrFemale = generateRandomForPercent(item.female_chance);
-                                        console.log('maleOrFemale', maleOrFemale)
-                                        // objectUpdate['planting_state'] 
+                                        if (maleOrFemale) {
+                                            objectUpdate['planting_state'] = 'female';
+                                        } else {
+                                            objectUpdate['planting_state'] = 'male';
+                                        }
                                     }
                                     await planting.updateOne(
                                         {
@@ -816,7 +819,7 @@ exports.testPlantingByDate = async (req, res) => {
                                         if (maleOrFemale) {
                                             objectUpdate['planting_state'] = 'female';
                                         } else {
-                                            objectUpdate['male'] = 'female';
+                                            objectUpdate['planting_state'] = 'male';
                                         }
 
                                     }
