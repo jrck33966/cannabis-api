@@ -3,7 +3,7 @@
 <!-- YYYYMMDDHHmmssZZ -->
 
 ```
-npm istall
+npm install
 ```
 ```
 npm start
