@@ -267,7 +267,7 @@ exports.startPlanting = async (req, res) => {
                 }
             }
         )
-        logger.info(`startPlanting success by eth_address: ${eth_address}`)
+        logger.info(`startPlanting success by eth_address: ${eth_address} -- Detail : ${plantingModel}`)
         return res
             .status(200)
             .json({
@@ -337,6 +337,12 @@ exports.getPlanting = async (req, res) => {
                                         objectUpdate['next_phase_datetime'] = newDateObj
                                     } else if (nextPhase == 4) {
                                         objectUpdate['phase'] = nextPhase;
+                                        let maleOrFemale = generateRandomForPercent(item.female_chance);
+                                        if (maleOrFemale) {
+                                            objectUpdate['planting_state'] = 'female';
+                                        } else {
+                                            objectUpdate['planting_state'] = 'male';
+                                        }
                                     }
                                     await planting.updateOne(
                                         {
@@ -439,6 +445,7 @@ exports.getPlanting = async (req, res) => {
                                     }
                                     checkDate = true;
                                 }
+                                checkDate = true;
                             } else {
                                 checkDate = true;
                                 console.log("ยังไม่ถึงเวลา")
@@ -452,6 +459,7 @@ exports.getPlanting = async (req, res) => {
                 } while (!checkDate)
                 item['_doc']['timeserver'] = moment(Date.now()).format('YYYYMMDDHHmmssZZ')
                 delete item._doc._id;
+                item._doc.id = await encrypt(item._doc.id)
                 arr_send.push(item)
             }
             logger.info(`getPlanting by eth_address: ${eth_address}`)
@@ -765,11 +773,11 @@ exports.testPlantingByDate = async (req, res) => {
             for (let item of find) {
                 let checkDate = false;
                 do {
-                    if (item.is_planting == 'planting') {
+                    if (item.planting_state == 'planting') {
                         let next = item.next_phase_datetime;
                         let cur_phase = item.phase;
                         if (cur_phase != 4) {
-                            if (moment(date).format('YYYYMMDDHHmmssZZ') > moment(next).format('YYYYMMDDHHmmssZZ')) {
+                            if (moment(date, 'YYYYMMDDHHmmssZZ').format('YYYYMMDDHHmmssZZ') > moment(next).format('YYYYMMDDHHmmssZZ')) {
                                 let nextPhase;
                                 let alive;
                                 let nextDate;
@@ -807,6 +815,13 @@ exports.testPlantingByDate = async (req, res) => {
                                         objectUpdate['next_phase_datetime'] = newDateObj
                                     } else if (nextPhase == 4) {
                                         objectUpdate['phase'] = nextPhase;
+                                        let maleOrFemale = generateRandomForPercent(item.female_chance);
+                                        if (maleOrFemale) {
+                                            objectUpdate['planting_state'] = 'female';
+                                        } else {
+                                            objectUpdate['planting_state'] = 'male';
+                                        }
+
                                     }
                                     await planting.updateOne(
                                         {
@@ -822,21 +837,21 @@ exports.testPlantingByDate = async (req, res) => {
                                     item['next_phase_datetime'] = newDateObj
                                 } else {
                                     console.log("ตาย")
-                                    let is_planting = 'failed';
+                                    let is_planting = 'die';
                                     await planting.updateOne(
                                         {
                                             "_id": ObjectId(item._id)
                                         },
                                         {
                                             $set: {
-                                                is_planting: is_planting,
+                                                planting_state: is_planting,
                                                 fail_date: Date.now()
                                             }
                                         }
                                     ).exec();
 
                                     //update date after calculate
-                                    item['is_planting'] = is_planting;
+                                    item['planting_state'] = is_planting;
                                     let find_user = await users.findOne({ eth_address: eth_address }).exec();
                                     let arritem_user = find_user.item;
 
@@ -856,7 +871,7 @@ exports.testPlantingByDate = async (req, res) => {
                                         default:
                                             break;
                                     }
-                                    //update return item to user
+                                    //update return item and change status playerland(idle) to user
                                     let flag_seed = false;
                                     if (cur_phase == 1 || cur_phase == 2) {
                                         for (let arrItems of find_item_planing) {
@@ -887,9 +902,29 @@ exports.testPlantingByDate = async (req, res) => {
                                                 }
                                             }
                                         )
+                                        let find_user = await users.findOne({ eth_address, eth_address }).exec();
+                                        if (find_user) {
+                                            find_user['player_land'].map(async it => {
+                                                if (it.land_id == it.land_id) {
+                                                    it.status = 'idle'
+                                                    let find_land_player = await playerLand.findOne({ land_id: it.land_id }).exec();
+                                                    if (find_land_player) {
+                                                        await playerLand.updateOne(
+                                                            { land_id: it.land_id },
+                                                            {
+                                                                $set: {
+                                                                    status: 'idle'
+                                                                }
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            })
+                                        }
                                     }
                                     checkDate = true;
                                 }
+                                checkDate = true;
                             } else {
                                 checkDate = true;
                                 console.log("ยังไม่ถึงเวลา")
@@ -903,6 +938,7 @@ exports.testPlantingByDate = async (req, res) => {
                 } while (!checkDate)
                 item['_doc']['timeserver'] = moment(Date.now()).format('YYYYMMDDHHmmssZZ')
                 delete item._doc._id;
+                item._doc.id = await encrypt(item._doc.id)
                 arr_send.push(item)
             }
             logger.info(`getPlanting by eth_address: ${eth_address}`)
@@ -958,23 +994,32 @@ exports.disCard = async (req, res) => {
                 });
         }
 
-        await planting.updateOne(
-            { eth_address: eth_address, id: id },
-            {
-                $set: {
-                    is_active: false
+        let find_planing = await planting.findOne({ id: id, eth_address: eth_address }).exec();
+        if (find_planing) {
+            await planting.updateOne(
+                { "_id": ObjectId(find_planing._id) },
+                {
+                    $set: {
+                        is_active: false
+                    }
                 }
-            }
-        )
-        logger.info(`Planting Discard user eth_address : ${eth_address} , planting_id : ${id} `);
-        return res
-            .status(200)
-            .json({
-                statusCode: "200",
-                message: "successfully"
-            });
-
-
+            )
+            logger.info(`Planting Discard user eth_address : ${eth_address} , planting_id : ${id} successfully`);
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "successfully"
+                });
+        } else {
+            logger.warn(`Planting Discard user eth_address : ${eth_address} , Planting  Not Found. `);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `Planting Not Found.`,
+                });
+        }
     }
     catch (err) {
         logger.error(`Planting Discard error: ${err}`);
@@ -1009,24 +1054,33 @@ exports.harvest = async (req, res) => {
                 });
         }
 
-        await planting.updateOne(
-            { eth_address: eth_address, id: id },
-            {
-                $set: {
-                    is_active: false,
-                    planting_state: 'harvested'
+        let find_planing = await planting.findOne({ id: id, eth_address: eth_address }).exec();
+        if (find_planing) {
+            await planting.updateOne(
+                { "_id": ObjectId(find_planing._id) },
+                {
+                    $set: {
+                        is_active: false,
+                        planting_state: 'harvested'
+                    }
                 }
-            }
-        )
-        logger.info(`Planting Harvest user eth_address : ${eth_address} , planting_id : ${id} `);
-        return res
-            .status(200)
-            .json({
-                statusCode: "200",
-                message: "successfully"
-            });
-
-
+            )
+            logger.info(`Planting Harvest user eth_address : ${eth_address} , planting_id : ${id} successfully`);
+            return res
+                .status(200)
+                .json({
+                    statusCode: "200",
+                    message: "successfully"
+                });
+        } else {
+            logger.warn(`Planting Harvest user eth_address : ${eth_address} , Planting  Not Found. `);
+            return res
+                .status(400)
+                .json({
+                    statusCode: "400",
+                    message: `Planting Not Found.`,
+                });
+        }
     }
     catch (err) {
         logger.error(`Planting Harvest error: ${err}`);
