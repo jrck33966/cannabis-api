@@ -16,6 +16,7 @@ var image = require("./core/image/image.route")
 var planting = require("./core/planting/planting.route")
 var reporting = require("./core/reporting/reporting.route")
 var nft = require("./core/nft/nft.route")
+var script = require('./script/insertMongoDB')
 
 const rateLimit = require('express-rate-limit')
 
@@ -26,7 +27,7 @@ const limiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minutes
     max: 500, // limit each IP to 500 requests per windowMs
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-	legacyHeaders: false, 
+    legacyHeaders: false,
 });
 
 
@@ -44,6 +45,7 @@ app.use('/api/v1/planting', planting)
 app.use('/api/v1/image', image)
 app.use('/api/v2/reporting', reporting)
 app.use('/api/v3/nft', nft)
+app.use('/api/dev/insertmongo', script.insertMongo)
 app.use(function (req, res, next) {
     res.status(404).send("Sorry can't find that!.")
 })
@@ -51,6 +53,8 @@ app.use(function (req, res, next) {
     res.status(500).send("Internal Server error.")
 })
 
+
+const json = require('./script/item.json')
 app.listen(config.app.port, async () => {
     let con = await connect();
     if (con) {
@@ -60,6 +64,9 @@ app.listen(config.app.port, async () => {
         process.exit()
     }
 })
+
+
+
 
 // var options = {
 //     key: fs.readFileSync('./ssl/server-key.pem'),
